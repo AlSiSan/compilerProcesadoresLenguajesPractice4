@@ -146,8 +146,5 @@ opasign = {:=}
 
 
 
-L = palclave + oprelac + opsuma + opmult + opasign
-
-
-	+ [a-zA-Z0-9:;,\[\]\(\)]
+L = palclave + oprelac + opsuma + opmult + opasign + [a-zA-Z0-9:;,\[\]\(\)]
  
