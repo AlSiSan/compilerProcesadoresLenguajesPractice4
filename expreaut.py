@@ -50,4 +50,3 @@ class AFD:
 	def parseStr (self, string):
 		final = self.auxParse(self.initst, string)
 		return final in self.fstates
-		
