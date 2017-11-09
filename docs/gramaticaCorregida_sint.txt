@@ -1,0 +1,50 @@
+<Programa> -> PROGRAMA id ; <decl_var><decl_subprog> <instrucciones> .
+<decl_var> -> VAR <lista_id> : <tipo> ; <decl_v> | λ
+<decl_v> -> <lista_id> : <tipo> ; <decl_v> | λ
+<lista_id> -> id <resto_listaid>
+<resto_listaid> -> , <lista_id> | λ
+<tipo> -> <tipo_std> | VECTOR [ num] de <tipo>
+<tipo_std> -> ENTERO | REAL | BOOLEANO
+<decl_subprg> -> <decl_sub> ; <decl_subprg> | λ
+<decl_sub> -> PROC id ; <instrucciones> | FUNCION id : <tipo_std> ; <instrucciones>
+<instrucciones> -> INICIO <lista_inst> FIN
+<lista_inst> -> <instruccion> ; <lista_inst> | λ
+<instruccion> -> INICIO <lista_inst> FIN | <inst_simple> | <inst_e/s>
+			  -> SI <expresion> ENTONCES <instruccion> SINO <instruccion>
+			  -> MIENTRAS <expresion> HACER <instruccion>
+<inst_simple> -> id <resto_instsimple>
+<resto_instsimple> -> opasigna <expresion> | [ <expr_simple> ] opasigna <expresion> | λ
+<variable> -> id <resto_var>
+<resto_var> -> [ <expr_simple>] | λ
+<inst_e/s> -> LEE ( id ) | ESCRIBE ( <expr_simple> )
+<expresion> -> <expr_simple> <expr_aux>
+<expr_aux> -> oprel <expr_simple> | λ
+<expr_simple> -> <termino> <resto_exsimple> | <signo> <termino> <resto_exsimple>
+<resto_exsimple> -> opsuma <termino> <resto_exsimple> | O <termino> <resto_exsimple> | λ
+<termino> -> <factor> <resto_term>
+<resto_term> -> opmult <factor> <resto_term> | Y <factor> <resto_term> | λ
+<factor> -> <variable> | num | ( <expresion> ) | NO <factor> | CIERTO | FALSO
+<signo> -> + | -
+
+
+
+
+<decl_var> -> <decl_v>
+<lista_id> -> <resto_listaid>
+<resto_listaid> -> <lista_id>
+<tipo> -> <tipo_std>
+<decl_sub> -> <instrucciones>
+<instruccion> -> <inst_simple>
+<instruccion> -> <inst_e/s>
+<inst_simple> -> <resto_instsimple>
+<resto_instsimple> -> <expresion>
+<variable> -> <resto_var>
+<expresion> -> <expr_simple>
+<expresion> -> <expr_aux>
+<expr_aux> -> <expr_simple>
+<expr_simple> -> <termino>
+<expr_simple> -> <resto_exsimple>
+<termino> -> <factor>
+<termino> -> <resto_term>
+<resto_term> -> <factor>
+<factor> -> <variable>
