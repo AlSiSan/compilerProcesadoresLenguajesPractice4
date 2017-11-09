@@ -15,7 +15,7 @@
 <inst_simple> -> id <resto_instsimple>
 <resto_instsimple> -> opasigna <expresion> | [ <expr_simple> ] opasigna <expresion> | λ
 <variable> -> id <resto_var>
-<resto_var> -> [ <expr_simple>] | λ
+<resto_var> -> [ <expr_simple> ] | λ
 <inst_e/s> -> LEE ( id ) | ESCRIBE ( <expr_simple> )
 <expresion> -> <expr_simple> <expr_aux>
 <expr_aux> -> oprel <expr_simple> | λ
