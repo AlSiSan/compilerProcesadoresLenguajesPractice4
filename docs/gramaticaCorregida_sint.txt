@@ -3,7 +3,7 @@
 <decl_v> -> <lista_id> : <tipo> ; <decl_v> | λ
 <lista_id> -> id <resto_listaid>
 <resto_listaid> -> , <lista_id> | λ
-<tipo> -> <tipo_std> | VECTOR [ num] de <tipo>
+<tipo> -> <tipo_std> | VECTOR [ num ] de <tipo>
 <tipo_std> -> ENTERO | REAL | BOOLEANO
 <decl_subprg> -> <decl_sub> ; <decl_subprg> | λ
 <decl_sub> -> PROC id ; <instrucciones> | FUNCION id : <tipo_std> ; <instrucciones>
