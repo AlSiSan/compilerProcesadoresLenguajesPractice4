@@ -48,13 +48,22 @@ class SynLex:
 			self.analyzeTipo()
 			self.check("PtoComa")
 			self.analyzeDeclV()
+		elif (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION", "INICIO"] )):
+			return
+		else:
+			self.error()
 
 	def analyzeDeclV(self):
-		self.analyzeListaId()
-		self.check("DosPtos")
-		self.analyzeTipo()
-		self.check("PtoComa")
-		self.analyzeDeclV()
+		if (self.component.cat == "Identif");
+			self.analyzeListaId()
+			self.check("DosPtos")
+			self.analyzeTipo()
+			self.check("PtoComa")
+			self.analyzeDeclV()
+		elif (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION", "INICIO"] )):
+			return
+		else:
+			self.error()
 
 	def analyzeListaId(self):
 		if (self.component.cat == "Identif"):
@@ -65,31 +74,31 @@ class SynLex:
 
 	def analyzeRestoListaId(self):
 		if (self.component.cat == "Coma"):
+			self.advance()
 			self.analyzeListaId()
+		elif (self.component.cat == "DosPtos"):
+			return
+		else:
+			self.error()
 
 	def analyzeTipo(self):
 		if (self.component.cat == "PR" and self.component.valor == "VECTOR"):
 			self.advance()
 			self.check("CorAp")
-			if (self.component.cat == "Numero" and self.component.isInt):
+			self.check("Numero")
+			self.check("CorCi")
+			if (self.component.cat == "PR" and self.component.valor == "DE"):
 				self.advance()
-				self.check("CorCi")
-				if (self.component.cat == "PR" and self.component.valor == "DE"):
-					self.advance()
-					self.analyzeTipo()
-				else:
-					self.error()
+				self.analyzeTipo()
 			else:
 				self.error()
-		else:
+		elif (self.component.cat == "PR" and (self.component.valor in ["ENTERO", "REAL", "BOOLEANO"] )):
 			self.analyzeTipoStd()
+		else:
+			self.error()
 
 	def analyzeTipoStd(self):
-		if (self.component.cat == "PR" and self.component.valor == "ENTERO"):
-			self.advance()
-		elif (self.component.cat == "PR" and self.component.valor == "REAL"):
-			self.advance()
-		elif (self.component.cat == "PR" and self.component.valor == "BOOLEANO"):
+		if (self.component.cat == "PR" and (self.component.valor in ["ENTERO", "REAL", "BOOLEANO"] )):
 			self.advance()
 		else:
 			self.error()
