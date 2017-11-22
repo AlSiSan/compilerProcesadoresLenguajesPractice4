@@ -39,6 +39,7 @@ class SynAna:
 			self.check("Punto")
 		else:
 			self.error()
+			self.sincroniza([], [])
 
 	def analyzeDeclVar(self):
 		if (self.component.cat == "PR" and self.component.valor == "VAR"):
@@ -50,6 +51,7 @@ class SynAna:
 			self.analyzeDeclV()
 		elif (not (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION", "INICIO"] ))):
 			self.error()
+			self.sincroniza(['PR'], ['PROC', 'FUNCION', 'INICIO'])
 
 	def analyzeDeclV(self):
 		if (self.component.cat == "Identif"):
@@ -60,6 +62,7 @@ class SynAna:
 			self.analyzeDeclV()
 		elif (not (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION", "INICIO"] ))):
 			self.error()
+			self.sincroniza(['PR'], ['PROC', 'FUNCION', 'INICIO'])
 
 	def analyzeListaId(self):
 		if (self.component.cat == "Identif"):
@@ -67,6 +70,7 @@ class SynAna:
 			self.analyzeRestoListaId()
 		else:
 			self.error()
+			self.sincroniza(['DosPtos'], [])
 
 	def analyzeRestoListaId(self):
 		if (self.component.cat == "Coma"):
@@ -74,6 +78,7 @@ class SynAna:
 			self.analyzeListaId()
 		elif (not (self.component.cat == "DosPtos")):
 			self.error()
+			self.sincroniza(['DosPtos'], [])
 
 	def analyzeTipo(self):
 		if (self.component.cat == "PR" and self.component.valor == "VECTOR"):
@@ -86,16 +91,19 @@ class SynAna:
 				self.analyzeTipo()
 			else:
 				self.error()
+				self.sincroniza(['PtoComa'], [])
 		elif (self.component.cat == "PR" and (self.component.valor in ["ENTERO", "REAL", "BOOLEANO"] )):
 			self.analyzeTipoStd()
 		else:
 			self.error()
+			self.sincroniza(['PtoComa'], [])
 
 	def analyzeTipoStd(self):
 		if (self.component.cat == "PR" and (self.component.valor in ["ENTERO", "REAL", "BOOLEANO"] )):
 			self.advance()
 		else:
 			self.error()
+			self.sincroniza(['PtoComa'], [])
 
 	def analyzeDeclSubprg(self):
 		if (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION"] )):
@@ -104,14 +112,15 @@ class SynAna:
 			self.analyzeDeclSubprg()
 		elif (not (self.component.cat == "PR" and self.component.valor == "INICIO")):
 			self.error()
+			self.sincroniza(['PR'], ['INICIO'])
 
-	def analyzeDeclSub(self):
+	def analyzeDeclSub(self): # Check debería admitir PR y el conjunto de sincronizacion #############################
 		if (self.component.cat == "PR" and self.component.valor == "PROC"):
 			self.advance()
 			self.check("Identif")
 			self.check("PtoComa")
 			self.analyzeInstrucciones()
-		elif (self.component.cat == "PR" and self.component.valor == "PROC"):
+		elif (self.component.cat == "PR" and self.component.valor == "FUNCION"):
 			self.advance()
 			self.check("Identif")
 			self.check("DosPtos")
@@ -146,14 +155,18 @@ class SynAna:
 		elif (self.component.cat == "PR" and self.component.valor == "INICIO"):
 			self.advance()
 			self.analyzeListaInst()
-			if (not (self.component.cat == "PR" and self.component.valor == "FIN")):
+			if (self.component.cat == "PR" and self.component.valor == "FIN"):
+				self.advance()
+			else:
 				self.error()
 		elif (self.component.cat == "PR" and self.component.valor == "SI"):
 			self.advance()
 			self.analyzeExpresion()
 			if (self.component.cat == "PR" and self.component.valor == "ENTONCES"):
+				self.advance()
 				self.analyzeInstruccion()
 				if (self.component.cat == "PR" and self.component.valor == "SINO"):
+					self.advance()
 					self.analyzeInstruccion()
 				else:
 					self.error()
@@ -163,6 +176,7 @@ class SynAna:
 			self.advance()
 			self.analyzeExpresion()
 			if (self.component.cat == "PR" and self.component.valor == "HACER"):
+				self.advance()
 				self.analyzeInstruccion()
 			else:
 				self.error()
@@ -262,6 +276,7 @@ class SynAna:
 
 	def analyzeRestoTerm(self):
 		if (self.component.cat == "OpMult" or (self.component.cat == "PR" and self.component.valor in ["Y"])):
+			self.advance()
 			self.analyzeFactor()
 			self.analyzeRestoTerm()
 		elif (not (self.component.cat in ["PtoComa", "CorCi", "ParentCi", "OpRel", "OpAdd"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "SINO", "HACER", "O"]))):
@@ -284,42 +299,31 @@ class SynAna:
 		else:
 			self.error()
 
-	def analyzeSigno(self): ##############
+	def analyzeSigno(self):
 		if (self.component.cat == "OpAdd"):
 			self.advance()
 		else:
 			self.error()
 
 	def check(self, cat):
-		if (self.component == cat):
+		if (self.component.cat == cat):
 			self.advance()
 		else:
 			self.error()
 
+	def sincroniza(self, sinc):
+		while self.componente is not None and self.componente.cat not in sinc:
+			self.advance()
+
 	def error(self):
 		print ("SINTAX TERROR: Line " + str(self.lexana.nlinea))
+		print ("-- Component: " + str(self.component))
+		self.advance()
 
 	def __init__(self, lexana):
 		self.lexana = lexana
 		self.advance()
-		self.analyzePrograma()
-		self.check("eof") ############
 
-	'''
-	def predAna(self):
-		self.stack.append(self.bos) # Se introduce el simbolo de fondo de pila
-		self.stack.append("<Programa>") # Se introduce el primer N
-
-		analex = Analex(self.flu) # Inicializar analizador lexico
-		try:
-			a = analex.Analiza()
-			while (stack[-1] != self.bos):
-				X = self.stack.pop()
-				if (self.N.contains(X))
-		except errores.Error, err:
-			sys.stderr.write("%s\n" % err)
-			analex.muestraError(sys.stderr)
-	'''
 
 ############################################################################
 #
@@ -337,7 +341,6 @@ if __name__=="__main__":
 	fl = flujo.Flujo(txt)
 	analex=Analex(fl)
 	synana=SynAna(analex)
-	synana.advance()
 	try:
 		synana.analyzePrograma()
 	except errores.Error, err:
