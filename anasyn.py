@@ -15,6 +15,9 @@ class SynAna:
 		self.component = self.lexana.Analiza()
 
 	def analyzePrograma(self):
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
 		if (self.component.cat == "PR" and self.component.valor == "PROGRAMA"):
 			self.advance()
 			self.check(cat="Identif", sync=set([None, "PtoComa"]))
@@ -275,6 +278,9 @@ class SynAna:
 				spr=set(["NO", "CIERTO", "FALSO"]))
 
 	def check(self, **kwargs):
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
 		if ('cat' in kwargs):
 			if (self.component.cat == kwargs['cat']):
 				if (self.component.cat == "PR" and 'valor' in kwargs and self.component.valor == kwargs['valor']
