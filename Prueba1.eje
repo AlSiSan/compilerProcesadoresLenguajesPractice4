@@ -1,5 +1,5 @@
 PROGRAMA p1;
-VR i,x:ENTERO;
+VAR i,x:ENTERO;
 INICIO
   i:=0.0;
    MIENTRAS (i<>5) HACER
