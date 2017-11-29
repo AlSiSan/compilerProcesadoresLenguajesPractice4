@@ -11,58 +11,41 @@ from analex import Analex
 from sets import ImmutableSet
 
 class SynAna:
-	'''
-	def __init__(self, flu):
-		self.flu = flu
-
-		# Pila
-		self.stack = []
-
-		# Conjunto N de no terminales
-		self.N = ImmutableSet(["<Programa>", "<decl_var>", "<decl_v>", "<lista_id>", "<resto_listaid>", "<Tipo>", "<Tipo_std>", "<decl_subprg>", "<instrucciones>", "<lista_inst>", "<instruccion>", "<Inst_simple>", "<resto_instsimple>", "<variable>", "<resto_var>", "<inst_e/s>", "<expresion>>", "<expr_simple>", "<resto_exsimple>", "<termino>", "<resto_term>", "<factor>", "<signo>"])
-
-		# Caracter de fondo de pila
-		self.bos = "$"
-	'''
-
 	def advance(self):
 		self.component = self.lexana.Analiza()
 
 	def analyzePrograma(self):
 		if (self.component.cat == "PR" and self.component.valor == "PROGRAMA"):
 			self.advance()
-			self.check("Identif")
-			self.check("PtoComa")
+			self.check(cat="Identif", sync=set())
+			self.check(cat="PtoComa", sync=set())
 			self.analyzeDeclVar()
 			self.analyzeDeclSubprg()
 			self.analyzeInstrucciones()
-			self.check("Punto")
+			self.check(cat="Punto", sync=set())
 		else:
 			self.error()
-			self.sincroniza([], [])
 
 	def analyzeDeclVar(self):
 		if (self.component.cat == "PR" and self.component.valor == "VAR"):
 			self.advance()
 			self.analyzeListaId()
-			self.check("DosPtos")
+			self.check(cat="DosPtos", sync=set())
 			self.analyzeTipo()
-			self.check("PtoComa")
+			self.check(cat="PtoComa", sync=set())
 			self.analyzeDeclV()
 		elif (not (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION", "INICIO"] ))):
 			self.error()
-			self.sincroniza(['PR'], ['PROC', 'FUNCION', 'INICIO'])
 
 	def analyzeDeclV(self):
 		if (self.component.cat == "Identif"):
 			self.analyzeListaId()
-			self.check("DosPtos")
+			self.check(cat="DosPtos", sync=set())
 			self.analyzeTipo()
-			self.check("PtoComa")
+			self.check(cat="PtoComa", sync=set())
 			self.analyzeDeclV()
 		elif (not (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION", "INICIO"] ))):
 			self.error()
-			self.sincroniza(['PR'], ['PROC', 'FUNCION', 'INICIO'])
 
 	def analyzeListaId(self):
 		if (self.component.cat == "Identif"):
@@ -70,7 +53,7 @@ class SynAna:
 			self.analyzeRestoListaId()
 		else:
 			self.error()
-			self.sincroniza(['DosPtos'], [])
+			self.sincroniza()
 
 	def analyzeRestoListaId(self):
 		if (self.component.cat == "Coma"):
@@ -78,54 +61,46 @@ class SynAna:
 			self.analyzeListaId()
 		elif (not (self.component.cat == "DosPtos")):
 			self.error()
-			self.sincroniza(['DosPtos'], [])
 
 	def analyzeTipo(self):
 		if (self.component.cat == "PR" and self.component.valor == "VECTOR"):
 			self.advance()
-			self.check("CorAp")
-			self.check("Numero")
-			self.check("CorCi")
-			if (self.component.cat == "PR" and self.component.valor == "DE"):
-				self.advance()
-				self.analyzeTipo()
-			else:
-				self.error()
-				self.sincroniza(['PtoComa'], [])
+			self.check(cat="CorAp", sync=set())
+			self.check(cat="Numero", sync=set())
+			self.check(cat="CorCi", sync=set())
+			self.check(cat="PR", valor="DE", sync=set(['PtoComa'], []))
+			self.analyzeTipo()
 		elif (self.component.cat == "PR" and (self.component.valor in ["ENTERO", "REAL", "BOOLEANO"] )):
 			self.analyzeTipoStd()
 		else:
 			self.error()
-			self.sincroniza(['PtoComa'], [])
 
 	def analyzeTipoStd(self):
 		if (self.component.cat == "PR" and (self.component.valor in ["ENTERO", "REAL", "BOOLEANO"] )):
 			self.advance()
 		else:
 			self.error()
-			self.sincroniza(['PtoComa'], [])
 
 	def analyzeDeclSubprg(self):
 		if (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION"] )):
 			self.analyzeDeclSub()
-			self.check("PtoComa")
+			self.check(cat="PtoComa", sync=set())
 			self.analyzeDeclSubprg()
 		elif (not (self.component.cat == "PR" and self.component.valor == "INICIO")):
 			self.error()
-			self.sincroniza(['PR'], ['INICIO'])
 
-	def analyzeDeclSub(self): # Check debería admitir PR y el conjunto de sincronizacion #############################
+	def analyzeDeclSub(self): # Check deberia admitir PR y el conjunto de sincronizacion #############################
 		if (self.component.cat == "PR" and self.component.valor == "PROC"):
 			self.advance()
-			self.check("Identif")
-			self.check("PtoComa")
+			self.check(cat="Identif", sync=set())
+			self.check(cat="PtoComa", sync=set())
 			self.analyzeInstrucciones()
 		elif (self.component.cat == "PR" and self.component.valor == "FUNCION"):
 			self.advance()
-			self.check("Identif")
-			self.check("DosPtos")
+			self.check(cat="Identif", sync=set())
+			self.check(cat="DosPtos", sync=set())
 			self.analyzeTipoStd()
-			self.check("PtoComa")
+			self.check(cat="PtoComa", sync=set())
 			self.analyzeInstrucciones()
 		else:
 			self.error()
@@ -134,17 +109,14 @@ class SynAna:
 		if (self.component.cat == "PR" and self.component.valor == "INICIO"):
 			self.advance()
 			self.analyzeListaInst()
-			if (self.component.cat == "PR" and self.component.valor == "FIN"):
-				self.advance()
-			else:
-				self.error()
+			self.check(cat="PR", valor="FIN", sync=set())
 		else:
 			self.error()
 
 	def analyzeListaInst(self):
 		if (self.component.cat == "Identif" or (self.component.cat == "PR" and self.component.valor in ["INICIO", "SI", "MIENTRAS", "LEE", "ESCRIBE"])):
 			self.analyzeInstruccion()
-			self.check("PtoComa")
+			self.check(cat="PtoComa", sync=set())
 			self.analyzeListaInst()
 		elif (not (self.component.cat == "PR" and self.component.valor == "FIN")):
 			self.error()
@@ -155,31 +127,19 @@ class SynAna:
 		elif (self.component.cat == "PR" and self.component.valor == "INICIO"):
 			self.advance()
 			self.analyzeListaInst()
-			if (self.component.cat == "PR" and self.component.valor == "FIN"):
-				self.advance()
-			else:
-				self.error()
+			self.check(cat="PR", valor="FIN", sync=set())
 		elif (self.component.cat == "PR" and self.component.valor == "SI"):
 			self.advance()
 			self.analyzeExpresion()
-			if (self.component.cat == "PR" and self.component.valor == "ENTONCES"):
-				self.advance()
-				self.analyzeInstruccion()
-				if (self.component.cat == "PR" and self.component.valor == "SINO"):
-					self.advance()
-					self.analyzeInstruccion()
-				else:
-					self.error()
-			else:
-				self.error()
+			self.check(cat="PR", valor="ENTONCES", sync=set())
+			self.analyzeInstruccion()
+			self.check(cat="PR", valor="SINO", sync=set())
+			self.analyzeInstruccion()
 		elif (self.component.cat == "PR" and self.component.valor == "MIENTRAS"):
 			self.advance()
 			self.analyzeExpresion()
-			if (self.component.cat == "PR" and self.component.valor == "HACER"):
-				self.advance()
-				self.analyzeInstruccion()
-			else:
-				self.error()
+			self.check(cat="PR", valor="HACER", sync=set())
+			self.analyzeInstruccion()
 		elif (self.component.cat == "PR" and self.component.valor in ["LEE", "ESCRIBE"]):
 			self.analyzeInstES()
 		else:
@@ -196,8 +156,8 @@ class SynAna:
 		if (self.component.cat == "CorAp"):
 			self.advance()
 			self.analyzeExprSimple()
-			self.check("CorCi")
-			self.check("OpAsigna")
+			self.check(cat="CorCi", sync=set())
+			self.check(cat="OpAsigna", sync=set())
 			self.analyzeExpresion()
 		elif (self.component.cat == "OpAsigna"):
 			self.advance()
@@ -216,21 +176,21 @@ class SynAna:
 		if (self.component.cat == "CorAp"):
 			self.advance()
 			self.analyzeExprSimple()
-			self.check("CorCi")
+			self.check(cat="CorCi", sync=set())
 		elif (not (self.component.cat in ["PtoComa", "CorCi", "ParentCi", "OpRel", "OpAdd", "OpMult"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "SINO", "HACER", "Y", "O"]))):
 			self.error()
 
 	def analyzeInstES(self):
 		if (self.component.cat == "PR" and self.component.valor == "LEE"):
 			self.advance()
-			self.check("ParentAp")
-			self.check("Identif")
-			self.check("ParentCi")
+			self.check(cat="ParentAp", sync=set())
+			self.check(cat="Identif", sync=set())
+			self.check(cat="ParentCi", sync=set())
 		elif (self.component.cat == "PR" and self.component.valor == "ESCRIBE"):
 			self.advance()
-			self.check("ParentAp")
+			self.check(cat="ParentAp", sync=set())
 			self.analyzeExprSimple()
-			self.check("ParentCi")
+			self.check(cat="ParentCi", sync=set())
 		else:
 			self.error()
 
@@ -290,7 +250,7 @@ class SynAna:
 		elif (self.component.cat == "ParentAp"):
 			self.advance()
 			self.analyzeExpresion()
-			self.check("ParentCi")
+			self.check(cat="ParentCi", sync=set())
 		elif (self.component.cat == "PR" and self.component.valor == "NO"):
 			self.advance()
 			self.analyzeFactor()
@@ -305,20 +265,24 @@ class SynAna:
 		else:
 			self.error()
 
-	def check(self, cat):
-		if (self.component.cat == cat):
+	def check(self, **kwargs):
+		if (self.component.cat == kwargs['cat']):
+			if 'valor' in kwargs:
+				if (self.component.valor != kwargs['valor']):
+					self.error(kwargs['sync'])
 			self.advance()
 		else:
-			self.error()
+			self.error(kwargs['sync'])
 
-	def sincroniza(self, sinc):
-		while self.componente is not None and self.componente.cat not in sinc:
-			self.advance()
+	def sincroniza(self, *args):
+		#while self.componente is not None and self.componente.cat not in args[0]:
+		#	self.advance()
+		self.advance()
 
-	def error(self):
+	def error(self, *args): 
 		print ("SINTAX TERROR: Line " + str(self.lexana.nlinea))
 		print ("-- Component: " + str(self.component))
-		self.advance()
+		self.sincroniza(args)
 
 	def __init__(self, lexana):
 		self.lexana = lexana
