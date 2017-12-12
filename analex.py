@@ -41,7 +41,7 @@ class Analex:
 		if ch==" ":
 			while (ch == ' '):
 				ch = self.flu.siguiente()
-				#self.flu.devuelve()
+			self.flu.devuelve(ch)
 			return self.Analiza()
 			# quitar todos los caracteres blancos 
 			#buscar el siguiente componente lexico que sera devuelto )
@@ -72,7 +72,7 @@ class Analex:
 					print ("ERROR: Comentario no cerrado")
 					return None
 				ch = self.flu.siguiente()
-			self.flu.devuelve()
+			self.flu.devuelve(ch)
 			return self.Analiza()
 		elif ch == "}":
 			print "ERROR: Comentario no abierto" # tenemos un comentario no abierto
@@ -81,7 +81,7 @@ class Analex:
 			ch = self.flu.siguiente()
 			if ch == '=':
 				return componentes.OpAsigna()
-			self.flu.devuelve()
+			self.flu.devuelve(ch)
 			return componentes.DosPtos()
 		elif ch == '=':
 			return componentes.OpRel(ch)
@@ -90,7 +90,7 @@ class Analex:
 			ch = self.flu.siguiente()
 			if ch == '=' or (fch == '<' and ch == '>'):
 				return componentes.OpRel(fch + ch)
-			self.flu.devuelve()
+			self.flu.devuelve(ch)
 			return componentes.OpRel(fch)
     
 		#Completar los operadores y categorias lexicas que faltan
@@ -100,7 +100,7 @@ class Analex:
 			while ch.isalpha() or ch.isdigit():
 				iden += ch
 				ch = self.flu.siguiente()
-			self.flu.devuelve()
+			self.flu.devuelve(ch)
 			if iden in self.PR and len(iden) != 0:
 				return componentes.PR(iden, self.nlinea)
 			return componentes.Identif(iden, self.nlinea)
@@ -121,7 +121,7 @@ class Analex:
 				while ch.isdigit():
 					num += ch
 					ch = self.flu.siguiente()
-			self.flu.devuelve()
+			self.flu.devuelve(ch)
 			return componentes.Numero(isInt, num)
 		elif ch == '\r':
 			return self.Analiza()
@@ -158,4 +158,4 @@ if __name__=="__main__":
 		i=i+1
 	except errores.Error, err:
 		sys.stderr.write("%s\n" % err)
-#analex.muestraError(sys.stderr)
+		analex.muestraError(sys.stderr)

@@ -30,6 +30,11 @@ class SynAna:
 			self.error(sync=set([None, "Identif"]))
 
 	def analyzeDeclVar(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "PR" and self.component.valor == "VAR"):
 			self.advance()
 			self.analyzeListaId()
@@ -41,6 +46,11 @@ class SynAna:
 			self.error(sync=set([None, "PR"]), spr=set(["PROC", "FUNCION", "INICIO"]))
 
 	def analyzeDeclV(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "Identif"):
 			self.analyzeListaId()
 			self.check(cat="DosPtos", sync=set([None, "PR"]), spr=set(["PROC", "FUNCION", "INICIO", "ENTERO", "REAL", "BOOLEANO", "VECTOR"]))
@@ -51,6 +61,11 @@ class SynAna:
 			self.error(sync=set([None, "PR"]), spr=set(["PROC", "FUNCION", "INICIO"]))
 
 	def analyzeListaId(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+
 		if (self.component.cat == "Identif"):
 			self.advance()
 			self.analyzeRestoListaId()
@@ -58,6 +73,11 @@ class SynAna:
 			self.error(sync=set([None, "DosPtos"]))
 
 	def analyzeRestoListaId(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "Coma"):
 			self.advance()
 			self.analyzeListaId()
@@ -65,6 +85,11 @@ class SynAna:
 			self.error(sync=set([None, "DosPtos"]))
 
 	def analyzeTipo(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "PR" and self.component.valor == "VECTOR"):
 			self.advance()
 			self.check(cat="CorAp", sync=set([None, "PtoComa", "Numero"]))
@@ -78,12 +103,23 @@ class SynAna:
 			self.error(sync=set([None, "PtoComa"]))
 
 	def analyzeTipoStd(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+
 		if (self.component.cat == "PR" and (self.component.valor in ["ENTERO", "REAL", "BOOLEANO"] )):
 			self.advance()
 		else:
 			self.error(sync=set([None, "PtoComa"]))
 
 	def analyzeDeclSubprg(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
+
 		if (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION"] )):
 			self.analyzeDeclSub()
 			self.check(cat="PtoComa", sync=set([None, "PR"]), spr=set(["INICIO", "PROC", "FUNCION"]))
@@ -92,6 +128,11 @@ class SynAna:
 			self.error(sync=set([None, "PR"]), spr=set(["INICIO"]))
 
 	def analyzeDeclSub(self): # Check deberia admitir PR y el conjunto de sincronizacion #############################
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "PR" and self.component.valor == "PROC"):
 			self.advance()
 			self.check(cat="Identif", sync=set([None, "PtoComa"]))
@@ -108,6 +149,11 @@ class SynAna:
 			self.error(sync=set([None, "PtoComa"]))
 
 	def analyzeInstrucciones(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "PR" and self.component.valor == "INICIO"):
 			self.advance()
 			self.analyzeListaInst()
@@ -116,6 +162,12 @@ class SynAna:
 			self.error(sync=set([None, "Punto", "PtoComa"]))
 
 	def analyzeListaInst(self):
+		
+
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "Identif" or (self.component.cat == "PR" and self.component.valor in ["INICIO", "SI", "MIENTRAS", "LEE", "ESCRIBE"])):
 			self.analyzeInstruccion()
 			self.check(cat="PtoComa", sync=set([None, "Identif", "PR"]), spr=set(["FIN", "INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]))
@@ -124,6 +176,12 @@ class SynAna:
 			self.error(sync=set([None, "PR"]), spr=set(["FIN"]))
 
 	def analyzeInstruccion(self):
+		
+
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "Identif"):
 			self.analyzeInstSimple()
 		elif (self.component.cat == "PR" and self.component.valor == "INICIO"):
@@ -148,6 +206,12 @@ class SynAna:
 			self.error(sync=set([None, "PtoComa", "PR"]), spr=set(["SINO"]))
 
 	def analyzeInstSimple(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
+
 		if (self.component.cat == "Identif"):
 			self.advance()
 			self.analyzeRestoInstSimple()
@@ -155,6 +219,11 @@ class SynAna:
 			self.error(sync=set([None, "PtoComa", "PR"]), spr=set(["SINO"]))
 
 	def analyzeRestoInstSimple(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "CorAp"):
 			self.advance()
 			self.analyzeExprSimple()
@@ -168,6 +237,12 @@ class SynAna:
 			self.error(sync=set([None, "PtoComa", "PR"]), spr=set(["SINO"]))
 
 	def analyzeVariable(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
+
 		if (self.component.cat == "Identif"):
 			self.advance()
 			self.analyzeRestoVar()
@@ -176,6 +251,11 @@ class SynAna:
 				spr=set(["Y", "O", "ENTONCES", "HACER", "SINO"]))
 
 	def analyzeRestoVar(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "CorAp"):
 			self.advance()
 			self.analyzeExprSimple()
@@ -186,6 +266,12 @@ class SynAna:
 				spr=set(["Y", "O", "ENTONCES", "HACER", "SINO"]))
 
 	def analyzeInstES(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
+
 		if (self.component.cat == "PR" and self.component.valor == "LEE"):
 			self.advance()
 			self.check(cat="ParentAp", sync=set([None, "Identif", "PtoComa", "PR"]), spr=set(["SINO"]))
@@ -200,6 +286,11 @@ class SynAna:
 			self.error(sync=set([None, "PtoComa", "PR"]), spr=set(["SINO"]))
 
 	def analyzeExpresion(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat in ["Identif", "Numero", "ParentAp", "OpAdd"] or (self.component.cat == "PR" and self.component.valor in ["NO", "CIERTO", "FALSO"])):
 			self.analyzeExprSimple()
 			self.analyzeExprAux()
@@ -207,6 +298,11 @@ class SynAna:
 			self.error(sync=set([None, "PR", "ParentCi", "PtoComa"]), spr=set(["ENTONCES", "HACER", "SINO"]))
 
 	def analyzeExprAux(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "OpRel"):
 			self.advance()
 			self.analyzeExprSimple()
@@ -214,6 +310,11 @@ class SynAna:
 			self.error(sync=set([None, "PR", "ParentCi", "PtoComa"]), spr=set(["ENTONCES", "HACER", "SINO"]))
 
 	def analyzeExprSimple(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat in ["Identif", "Numero", "ParentAp"] or (self.component.cat == "PR" and self.component.valor in ["NO", "CIERTO", "FALSO"])):
 			self.analyzeTermino()
 			self.analyzeRestoExSimple()
@@ -226,6 +327,11 @@ class SynAna:
 				spr=set(["ENTONCES", "HACER", "SINO"]))
 
 	def analyzeRestoExSimple(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "OpAdd" or (self.component.cat == "PR" and self.component.valor in ["O"])):
 			self.advance()
 			self.analyzeTermino()
@@ -235,6 +341,11 @@ class SynAna:
 				spr=set(["ENTONCES", "HACER", "SINO"]))
 
 	def analyzeTermino(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat in ["Identif", "Numero", "ParentAp"] or (self.component.cat == "PR" and self.component.valor in ["NO", "CIERTO", "FALSO"])):
 			self.analyzeFactor()
 			self.analyzeRestoTerm()
@@ -243,6 +354,11 @@ class SynAna:
 				spr=set(["O", "ENTONCES", "HACER", "SINO"]))
 
 	def analyzeRestoTerm(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "OpMult" or (self.component.cat == "PR" and self.component.valor in ["Y"])):
 			self.advance()
 			self.analyzeFactor()
@@ -252,6 +368,11 @@ class SynAna:
 				spr=set(["O", "ENTONCES", "HACER", "SINO"]))
 
 	def analyzeFactor(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "Identif"):
 			self.analyzeVariable()
 		elif (self.component.cat == "Numero"):
@@ -271,6 +392,11 @@ class SynAna:
 				spr=set(["Y", "O", "ENTONCES", "HACER", "SINO"]))
 
 	def analyzeSigno(self):
+		
+		if (self.component == None):
+			print("Fin de fichero inesperado!")
+			return
+		
 		if (self.component.cat == "OpAdd"):
 			self.advance()
 		else:

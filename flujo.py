@@ -24,7 +24,7 @@ class Flujo:
     #   return ""
 
   # Revierte un caracter no leido a la cadena de partida
-  def devuelve(self):
+  def devuelve(self, c):
     self.fic.seek(-1,1)
     #self.pos-= len(c)
 
@@ -43,7 +43,7 @@ if __name__=="__main__":
   linea= sys.stdin.readline()
   while linea and linea!= "\n":
     f= Flujo(linea)
-    print "Voy a se–alar los espacios:"
+    print "Voy a señalar los espacios:"
     c= f.siguiente()
     while c!= "":
       if c==" ":
@@ -64,7 +64,7 @@ if __name__=="__main__":
       l+= c
     if linea != l:
       print "Error:"
-      print "  le’do:", linea
+      print "  leído:", linea
       print "  reconstruido:", l
     else:
       print "BIEN"
