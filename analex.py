@@ -41,7 +41,7 @@ class Analex:
 		if ch==" ":
 			while (ch == ' '):
 				ch = self.flu.siguiente()
-      			self.flu.devuelve()
+				self.flu.devuelve()
 			return self.Analiza()
 			# quitar todos los caracteres blancos 
 			#buscar el siguiente componente lexico que sera devuelto )
@@ -92,7 +92,7 @@ class Analex:
 				return componentes.OpRel(fch + ch)
 			self.flu.devuelve()
 			return componentes.OpRel(fch)
-    
+
 		#Completar los operadores y categorias lexicas que faltan
 		elif ch.isalpha():
 			iden = ch
@@ -159,4 +159,3 @@ if __name__=="__main__":
 	except errores.Error, err:
 		sys.stderr.write("%s\n" % err)
 		analex.muestraError(sys.stderr)
-
