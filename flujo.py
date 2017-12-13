@@ -24,7 +24,7 @@ class Flujo:
     #   return ""
 
   # Revierte un caracter no leido a la cadena de partida
-  def devuelve(self, c):
+  def devuelve(self):
     self.fic.seek(-1,1)
     #self.pos-= len(c)
 
