@@ -41,7 +41,8 @@ class Analex:
 		if ch==" ":
 			while (ch == ' '):
 				ch = self.flu.siguiente()
-			self.flu.devuelve(ch)
+			if (len(ch) != 0):
+				self.flu.devuelve(ch)
 			return self.Analiza()
 			# quitar todos los caracteres blancos 
 			#buscar el siguiente componente lexico que sera devuelto )
@@ -72,7 +73,8 @@ class Analex:
 					print ("ERROR: Comentario no cerrado")
 					return None
 				ch = self.flu.siguiente()
-			self.flu.devuelve(ch)
+			if (len(ch) != 0):
+				self.flu.devuelve(ch)
 			return self.Analiza()
 		elif ch == "}":
 			print "ERROR: Comentario no abierto" # tenemos un comentario no abierto
@@ -100,7 +102,8 @@ class Analex:
 			while ch.isalpha() or ch.isdigit():
 				iden += ch
 				ch = self.flu.siguiente()
-			self.flu.devuelve(ch)
+			if (len(ch) != 0):
+				self.flu.devuelve(ch)
 			if iden in self.PR and len(iden) != 0:
 				return componentes.PR(iden, self.nlinea)
 			return componentes.Identif(iden, self.nlinea)
@@ -121,7 +124,8 @@ class Analex:
 				while ch.isdigit():
 					num += ch
 					ch = self.flu.siguiente()
-			self.flu.devuelve(ch)
+			if(len(ch) != 0):
+				self.flu.devuelve(ch)
 			return componentes.Numero(isInt, num)
 		elif ch == '\r':
 			return self.Analiza()
