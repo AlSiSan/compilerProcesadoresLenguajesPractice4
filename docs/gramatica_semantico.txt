@@ -1,0 +1,38 @@
+<Programa> -> PROGRAMA id ; {<decl_var>.ids = [id.valor]} <decl_var> {<decl_subprg>.ids = <decl_var>.ids} <decl_subprg> <instrucciones> .
+<decl_var> -> VAR {<lista_id>.ids = <decl_var>.ids} <lista_id> : <tipo> ; {<decl_v>.ids = <lista_id>.ids} <decl_v> {<decl_var>.ids = <decl_v>.ids}
+	   -> λ
+<decl_v> -> {<lista_id>.ids = <decl_v>.ids} <lista_id> : <tipo> ; {<decl_v>1.ids = <lista_id>.ids} <decl_v>1 {<decl_v>.ids = <decl_v>1.ids}
+	 -> λ
+<lista_id> -> id {if id.valor in <lista_id>.ids then ERROR(identif repetido);
+		  <lista_id>.ids.append(id.valor);
+		  <resto_listaid>.ids = <lista_id>.ids} <resto_listaid> {<lista_id>.ids = <resto_listaid>.ids}
+<resto_listaid> -> , {<lista_id>.ids = <resto_listaid>.ids} <lista_id> {<resto_listaid>.ids = <lista_id>.ids}
+		-> λ
+<tipo> -> <tipo_std> | VECTOR [ num ] de <tipo>
+<tipo_std> -> ENTERO | REAL | BOOLEANO
+<decl_subprg> -> {<decl_sub>.ids = <decl_subprg>.ids} <decl_sub> ; {<decl_subprg>1.ids = <decl_sub>.ids} <decl_subprg>1 {<decl_subprg>.ids = <decl_subprg>1.ids}
+	      -> λ
+<decl_sub> -> PROC id {if id.valor in <decl_sub>.ids then ERROR(identif repetido);
+		       <decl_sub>.ids.append(id.valor);} ; <instrucciones>
+	   -> FUNCION id {if id.valor in <decl_sub>.ids then ERROR(identif repetido);
+		          <decl_sub>.ids.append(id.valor);} : <tipo_std> ; <instrucciones>
+<instrucciones> -> INICIO <lista_inst> FIN
+<lista_inst> -> <instruccion> ; <lista_inst> | λ
+<instruccion> -> INICIO <lista_inst> FIN
+	      -> <inst_simple>
+	      -> <inst_e/s>
+	      -> SI <expresion> ENTONCES <instruccion> SINO <instruccion>
+	      -> MIENTRAS <expresion> HACER <instruccion>
+<inst_simple> -> id <resto_instsimple>
+<resto_instsimple> -> opasigna <expresion> | [ <expr_simple> ] opasigna <expresion> | λ
+<variable> -> id <resto_var>
+<resto_var> -> [ <expr_simple> ] | λ
+<inst_e/s> -> LEE ( id ) | ESCRIBE ( <expr_simple> )
+<expresion> -> <expr_simple> <expr_aux>
+<expr_aux> -> oprel <expr_simple> | λ
+<expr_simple> -> <termino> <resto_exsimple> | <signo> <termino> <resto_exsimple>
+<resto_exsimple> -> opsuma <termino> <resto_exsimple> | O <termino> <resto_exsimple> | λ
+<termino> -> <factor> <resto_term>
+<resto_term> -> opmult <factor> <resto_term> | Y <factor> <resto_term> | λ
+<factor> -> <variable> | num | ( <expresion> ) | NO <factor> | CIERTO | FALSO
+<signo> -> + | -
