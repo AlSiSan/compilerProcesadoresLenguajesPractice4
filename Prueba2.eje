@@ -1,0 +1,21 @@
+PROGRAMA p1;
+VAR x,y,i,x,i:ENTERO;
+FUNCION compara: BOOLEANO;
+ INICIO
+   SI x<y ENTONCES
+    INICIO
+     x:=i*4;
+     ESCRIBE(x);
+    FIN;
+   SINO
+    INICIO
+    FIN;
+ FIN;
+INICIO
+  i:=0.0;
+   MIENTRAS (i<>5) HACER
+    INICIO 
+      x:=i*4;
+      ESCRIBE(x);
+    FIN;
+FIN.
