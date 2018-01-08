@@ -3,12 +3,14 @@ VAR x,y,i,x,i:ENTERO;
 FUNCION compara: BOOLEANO;
  INICIO
    SI x<y ENTONCES
-    INICIO
-     x:=i*4;
-     ESCRIBE(x);
+    INICIO 
+      x:=i*4;
+      ESCRIBE(x);
     FIN;
    SINO
-    INICIO
+    INICIO 
+      x:=i*4;
+      ESCRIBE(x);
     FIN;
  FIN;
 INICIO

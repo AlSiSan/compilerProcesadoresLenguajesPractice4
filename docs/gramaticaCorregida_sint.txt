@@ -26,6 +26,9 @@
 <factor> -> <variable> | num | ( <expresion> ) | NO <factor> | CIERTO | FALSO
 <signo> -> + | -
 
+-> SI <expresion> ENTONCES <instruccion> ; SINO <instruccion>
+
+
 
 
 

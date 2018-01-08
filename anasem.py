@@ -217,6 +217,7 @@ class SynAna:
 			self.analyzeExpresion()
 			self.check(cat="PR", valor="ENTONCES", sync=set([None, "Identif", "PtoComa", "PR"]), spr=set(["SINO", "INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]))
 			self.analyzeInstruccion()
+			self.check(cat="PtoComa", sync=set([None, "PR"]), spr=set(["SINO"]))
 			self.check(cat="PR", valor="SINO", sync=set([None, "Identif", "PtoComa", "PR"]), spr=set(["SINO", "INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]))
 			self.analyzeInstruccion()
 		elif (self.component.cat == "PR" and self.component.valor == "MIENTRAS"):
