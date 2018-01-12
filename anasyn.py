@@ -33,7 +33,7 @@ class SynAna:
 			self.check(cat="Punto", sync=set([None]), endEx=True)
 		else:
 			self.error(msg='PROGRAMA',
-				sync=set([None, "Identif"]))
+				sync=set([None]))
 
 	def analyzeDeclVar(self, **kwargs):
 		decl_var = kwargs
@@ -211,26 +211,25 @@ class SynAna:
 		elif (self.component.cat == "PR" and self.component.valor == "INICIO"):
 			self.advance()
 			self.analyzeListaInst()
-			self.check(cat="PR", valor="FIN", sync=set([None, "PtoComa", "PR"]), spr=set(["SINO"]))
+			self.check(cat="PR", valor="FIN", sync=set([None, "PtoComa"]))
 		elif (self.component.cat == "PR" and self.component.valor == "SI"):
 			self.advance()
 			self.analyzeExpresion()
 			self.check(cat="PR", valor="ENTONCES", sync=set([None, "Identif", "PtoComa", "PR"]), spr=set(["SINO", "INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]))
 			self.analyzeInstruccion()
-			self.check(cat="PtoComa", sync=set([None, "PR"]), spr=set(["SINO"]))
+			self.check(cat="PtoComa", sync=set([None, "PtoComa", "PR"]), spr=set(["SINO"]))
 			self.check(cat="PR", valor="SINO", sync=set([None, "Identif", "PtoComa", "PR"]), spr=set(["SINO", "INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]))
 			self.analyzeInstruccion()
 		elif (self.component.cat == "PR" and self.component.valor == "MIENTRAS"):
 			self.advance()
 			self.analyzeExpresion()
-			self.check(cat="PR", valor="HACER", sync=set([None, "Identif", "PtoComa", "PR"]), spr=set(["SINO", "INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]))
+			self.check(cat="PR", valor="HACER", sync=set([None, "Identif", "PtoComa", "PR"]), spr=set(["INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]))
 			self.analyzeInstruccion()
 		elif (self.component.cat == "PR" and self.component.valor in ["LEE", "ESCRIBE"]):
 			self.analyzeInstES()
 		else:
 			self.error(msg='Identif, INICIO, SI, MIENTRAS, LEE, ESCRIBE',
-				sync=set([None, "PtoComa", "PR"]),
-				spr=set(["SINO"]))
+				sync=set([None, "PtoComa"]))
 
 	def analyzeInstSimple(self):
 		if (self.component == None):
@@ -241,8 +240,7 @@ class SynAna:
 			self.analyzeRestoInstSimple()
 		else:
 			self.error(msg='Identif',
-				sync=set([None, "PtoComa", "PR"]),
-				spr=set(["SINO"]))
+				sync=set([None, "PtoComa"]))
 
 	def analyzeRestoInstSimple(self):
 		if (self.component == None):
@@ -251,16 +249,15 @@ class SynAna:
 		if (self.component.cat == "CorAp"):
 			self.advance()
 			self.analyzeExprSimple()
-			self.check(cat="CorCi", sync=set([None, "PtoComa", "PR", "OpAsigna"]), spr=set(["SINO"]))
-			self.check(cat="OpAsigna", sync=set([None, "PtoComa", "PR", "Identif", "Numero", "ParentAp", "OpAdd"]), spr=set(["SINO", "NO", "CIERTO", "FALSO"]))
+			self.check(cat="CorCi", sync=set([None, "PtoComa", "OpAsigna"]))
+			self.check(cat="OpAsigna", sync=set([None, "PtoComa", "PR", "Identif", "Numero", "ParentAp", "OpAdd"]), spr=set(["NO", "CIERTO", "FALSO"]))
 			self.analyzeExpresion()
 		elif (self.component.cat == "OpAsigna"):
 			self.advance()
 			self.analyzeExpresion()
 		elif (not (self.component.cat == "PtoComa" or (self.component.cat == "PR" and self.component.valor == "SINO"))):
-			self.error(msg='[, OpAsigna, ;, SINO',
-				sync=set([None, "PtoComa", "PR"]),
-				spr=set(["SINO"]))
+			self.error(msg='[, OpAsigna, ;',
+				sync=set([None, "PtoComa"]))
 
 	def analyzeVariable(self):
 		if (self.component == None):
@@ -272,7 +269,7 @@ class SynAna:
 		else:
 			self.error(msg='Identif',
 				sync=set([None, "PR", "OpMult", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
-				spr=set(["Y", "O", "ENTONCES", "HACER", "SINO"]))
+				spr=set(["Y", "O", "ENTONCES", "HACER"]))
 
 	def analyzeRestoVar(self):
 		if (self.component == None):
@@ -282,11 +279,11 @@ class SynAna:
 			self.advance()
 			self.analyzeExprSimple()
 			self.check(cat="CorCi", sync=set([None, "PR", "OpMult", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
-				spr=set(["Y", "O", "ENTONCES", "HACER", "SINO"]))
+				spr=set(["Y", "O", "ENTONCES", "HACER"]))
 		elif (not (self.component.cat in ["PtoComa", "CorCi", "ParentCi", "OpRel", "OpAdd", "OpMult"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "SINO", "HACER", "Y", "O"]))):
 			self.error(msg='[, ;, ], ), OpRel, OpAdd, OpMult, ENTONCES, SINO, HACER, Y, O',
 				sync=set([None, "PR", "OpMult", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
-				spr=set(["Y", "O", "ENTONCES", "HACER", "SINO"]))
+				spr=set(["Y", "O", "ENTONCES", "HACER"]))
 
 	def analyzeInstES(self):
 		if (self.component == None):
@@ -294,18 +291,17 @@ class SynAna:
 
 		if (self.component.cat == "PR" and self.component.valor == "LEE"):
 			self.advance()
-			self.check(cat="ParentAp", sync=set([None, "Identif", "PtoComa", "PR"]), spr=set(["SINO"]))
-			self.check(cat="Identif", sync=set([None, "ParentCi", "PtoComa", "PR"]), spr=set(["SINO"]))
-			self.check(cat="ParentCi", sync=set([None, "PtoComa", "PR"]), spr=set(["SINO"]))
+			self.check(cat="ParentAp", sync=set([None, "Identif", "PtoComa"]))
+			self.check(cat="Identif", sync=set([None, "ParentCi", "PtoComa"]))
+			self.check(cat="ParentCi", sync=set([None, "PtoComa"]))
 		elif (self.component.cat == "PR" and self.component.valor == "ESCRIBE"):
 			self.advance()
-			self.check(cat="ParentAp", sync=set([None, "Identif", "Numero", "OpAdd", "ParentAp", "PtoComa", "PR"]), spr=set(["SINO", "NO", "CIERTO", "FALSO"]))
+			self.check(cat="ParentAp", sync=set([None, "Identif", "Numero", "OpAdd", "ParentAp", "PtoComa", "PR"]), spr=set(["NO", "CIERTO", "FALSO"]))
 			self.analyzeExprSimple()
-			self.check(cat="ParentCi", sync=set([None, "PtoComa", "PR"]), spr=set(["SINO"]))
+			self.check(cat="ParentCi", sync=set([None, "PtoComa"]))
 		else:
 			self.error(msg='LEE, ESCRIBE',
-				sync=set([None, "PtoComa", "PR"]),
-				spr=set(["SINO"]))
+				sync=set([None, "PtoComa"]))
 
 	def analyzeExpresion(self):
 		if (self.component == None):
@@ -317,7 +313,7 @@ class SynAna:
 		else:
 			self.error(msg='Identif, Numero, (, OpAdd, NO, CIERTO, FALSO',
 				sync=set([None, "PR", "ParentCi", "PtoComa"]),
-				spr=set(["ENTONCES", "HACER", "SINO"]))
+				spr=set(["ENTONCES", "HACER"]))
 
 	def analyzeExprAux(self):
 		if (self.component == None):
@@ -326,10 +322,10 @@ class SynAna:
 		if (self.component.cat == "OpRel"):
 			self.advance()
 			self.analyzeExprSimple()
-		elif (not (self.component.cat in ["PtoComa", "ParentCi"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "SINO", "HACER"]))):
-			self.error(msg='OpRel, ;, ), ENTONCES, SINO, HACER',
+		elif (not (self.component.cat in ["PtoComa", "ParentCi"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "HACER"]))):
+			self.error(msg='OpRel, ;, ), ENTONCES, HACER',
 				sync=set([None, "PR", "ParentCi", "PtoComa"]),
-				spr=set(["ENTONCES", "HACER", "SINO"]))
+				spr=set(["ENTONCES", "HACER"]))
 
 	def analyzeExprSimple(self):
 		if (self.component == None):
@@ -345,7 +341,7 @@ class SynAna:
 		else:
 			self.error(msg='Identif, Numero, (, NO, CIERTO, FALSO',
 				sync=set([None, "PR", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
-				spr=set(["ENTONCES", "HACER", "SINO"]))
+				spr=set(["ENTONCES", "HACER"]))
 
 	def analyzeRestoExSimple(self):
 		if (self.component == None):
@@ -355,10 +351,10 @@ class SynAna:
 			self.advance()
 			self.analyzeTermino()
 			self.analyzeRestoExSimple()
-		elif (not (self.component.cat in ["PtoComa", "CorCi", "ParentCi", "OpRel"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "SINO", "HACER"]))):
-			self.error(msg='OpAdd, O, ;, ], ), OpRel, ENTONCES, SINO, HACER',
+		elif (not (self.component.cat in ["PtoComa", "CorCi", "ParentCi", "OpRel"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "HACER"]))):
+			self.error(msg='OpAdd, O, ;, ], ), OpRel, ENTONCES, HACER',
 				sync=set([None, "PR", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
-				spr=set(["ENTONCES", "HACER", "SINO"]))
+				spr=set(["ENTONCES", "HACER"]))
 
 	def analyzeTermino(self):
 		if (self.component == None):
@@ -370,7 +366,7 @@ class SynAna:
 		else:
 			self.error(msg='Identif, Numero, (, NO, CIERTO, FALSO',
 				sync=set([None, "PR", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
-				spr=set(["O", "ENTONCES", "HACER", "SINO"]))
+				spr=set(["O", "ENTONCES", "HACER"]))
 
 	def analyzeRestoTerm(self):
 		if (self.component == None):
@@ -380,10 +376,10 @@ class SynAna:
 			self.advance()
 			self.analyzeFactor()
 			self.analyzeRestoTerm()
-		elif (not (self.component.cat in ["PtoComa", "CorCi", "ParentCi", "OpRel", "OpAdd"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "SINO", "HACER", "O"]))):
-			self.error(msg='OpMult, Y, ;, ), OpRel, OpAdd, ENTONCES, SINO, HACER, O', 
+		elif (not (self.component.cat in ["PtoComa", "CorCi", "ParentCi", "OpRel", "OpAdd"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "HACER", "O"]))):
+			self.error(msg='OpMult, Y, ;, ), OpRel, OpAdd, ENTONCES, HACER, O', 
 				sync=set([None, "PR", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
-				spr=set(["O", "ENTONCES", "HACER", "SINO"]))
+				spr=set(["O", "ENTONCES", "HACER"]))
 
 	def analyzeFactor(self):
 		if (self.component == None):
@@ -397,7 +393,7 @@ class SynAna:
 			self.advance()
 			self.analyzeExpresion()
 			self.check(cat="ParentCi", sync=set([None, "PR", "OpMult", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
-				spr=set(["Y", "O", "ENTONCES", "HACER", "SINO"]))
+				spr=set(["Y", "O", "ENTONCES", "HACER"]))
 		elif (self.component.cat == "PR" and self.component.valor == "NO"):
 			self.advance()
 			self.analyzeFactor()
@@ -406,7 +402,7 @@ class SynAna:
 		else:
 			self.error(msg='Identif, Numero, (, NO, CIERTO or FALSO',
 				sync=set([None, "PR", "OpMult", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
-				spr=set(["Y", "O", "ENTONCES", "HACER", "SINO"]))
+				spr=set(["Y", "O", "ENTONCES", "HACER"]))
 
 	def analyzeSigno(self):
 		if (self.component == None):
