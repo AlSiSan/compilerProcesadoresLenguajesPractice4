@@ -1,4 +1,4 @@
-<Programa> -> PROGRAMA id ; {<decl_var>.ids = [id.valor]} <decl_var> {<decl_subprg>.ids = <decl_var>.ids} <decl_subprg> <instrucciones> .
+<Programa> -> PROGRAMA id ; {<decl_var>.ids = [id.valor]} <decl_var> {<decl_subprg>.ids = <decl_var>.ids} <decl_subprg> {<instrucciones>.ids = <decl_subprg>.ids} <instrucciones> .
 <decl_var> -> VAR {<lista_id>.ids = <decl_var>.ids} <lista_id> : <tipo> ; {<decl_v>.ids = <lista_id>.ids} <decl_v> {<decl_var>.ids = <decl_v>.ids}
 	   -> λ
 <decl_v> -> {<lista_id>.ids = <decl_v>.ids} <lista_id> : <tipo> ; {<decl_v>1.ids = <lista_id>.ids} <decl_v>1 {<decl_v>.ids = <decl_v>1.ids}
@@ -13,26 +13,29 @@
 <decl_subprg> -> {<decl_sub>.ids = <decl_subprg>.ids} <decl_sub> ; {<decl_subprg>1.ids = <decl_sub>.ids} <decl_subprg>1 {<decl_subprg>.ids = <decl_subprg>1.ids}
 	      -> λ
 <decl_sub> -> PROC id {if id.valor in <decl_sub>.ids then ERROR(identif repetido);
-		       <decl_sub>.ids.append(id.valor);} ; <instrucciones>
+					<decl_sub>.ids.append(id.valor);} ; {<instrucciones>.ids = <decl_sub>.ids} <instrucciones>
 	   -> FUNCION id {if id.valor in <decl_sub>.ids then ERROR(identif repetido);
-		          <decl_sub>.ids.append(id.valor);} : <tipo_std> ; <instrucciones>
-<instrucciones> -> INICIO <lista_inst> FIN
-<lista_inst> -> <instruccion> ; <lista_inst> | λ
-<instruccion> -> INICIO <lista_inst> FIN
-	      -> <inst_simple>
-	      -> <inst_e/s>
-	      -> SI <expresion> ENTONCES <instruccion> ; SINO <instruccion>
-	      -> MIENTRAS <expresion> HACER <instruccion>
-<inst_simple> -> id <resto_instsimple>
-<resto_instsimple> -> opasigna <expresion> | [ <expr_simple> ] opasigna <expresion> | λ
-<variable> -> id <resto_var>
-<resto_var> -> [ <expr_simple> ] | λ
-<inst_e/s> -> LEE ( id ) | ESCRIBE ( <expr_simple> )
-<expresion> -> <expr_simple> <expr_aux>
-<expr_aux> -> oprel <expr_simple> | λ
-<expr_simple> -> <termino> <resto_exsimple> | <signo> <termino> <resto_exsimple>
-<resto_exsimple> -> opsuma <termino> <resto_exsimple> | O <termino> <resto_exsimple> | λ
-<termino> -> <factor> <resto_term>
-<resto_term> -> opmult <factor> <resto_term> | Y <factor> <resto_term> | λ
-<factor> -> <variable> | num | ( <expresion> ) | NO <factor> | CIERTO | FALSO
+					<decl_sub>.ids.append(id.valor);} : <tipo_std> ; {<instrucciones>.ids = <decl_sub>.ids} <instrucciones>
+<instrucciones> -> INICIO {<lista_inst>.ids = <instrucciones>.ids} <lista_inst> FIN
+<lista_inst> -> {<instruccion>.ids = <lista_inst>.ids} <instruccion> ; {<lista_inst>1.ids = <lista_inst>.ids} <lista_inst>1 | λ
+<instruccion> -> INICIO {<lista_inst>.ids = <instruccion>.ids} <lista_inst> FIN
+	      -> {<inst_simple>.ids = <instruccion>.ids} <inst_simple>
+	      -> {<inst_e/s>.ids = <instruccion>.ids} <inst_e/s>
+	      -> SI {<expresion>.ids = <instruccion>.ids} <expresion> ENTONCES {<instruccion>1.ids = <instruccion>.ids} <instruccion>1 ; SINO {<instruccion>2.ids = <instruccion>.ids} <instruccion>2
+	      -> MIENTRAS {<expresion>.ids = <instruccion>.ids} <expresion> HACER {<instruccion>1.ids = <instruccion>.ids} <instruccion>1
+<inst_simple> -> id {if id.valor not in <inst_simple>.ids then ERROR(Variable no declarada)} {<resto_instsimple>.ids = <inst_simple>.ids} <resto_instsimple>
+<resto_instsimple> -> opasigna {<expresion>.ids = <resto_instsimple>.ids} <expresion> | [ {<expr_simple>.ids = <resto_instsimple>.ids} <expr_simple> ] opasigna {<expresion>.ids = <resto_instsimple>.ids} <expresion> | λ
+<variable> -> {if id.valor not in <inst_simple>.ids then ERROR(Variable no declarada)} id {<resto_var>.ids = <variable>.ids} <resto_var>
+<resto_var> -> [ {<expr_simple>.ids = <resto_var>.ids} <expr_simple> ] | λ
+<inst_e/s> -> LEE ( id {if id.valor not in <inst_simple>.ids then ERROR(Variable no declarada)} ) | ESCRIBE ( {<expr_simple>.ids = <resto_var>.ids} <expr_simple> )
+<expresion> -> {<expr_simple>.ids = <expresion>.ids} <expr_simple> {<expr_aux>.ids = <expresion>.ids} <expr_aux>
+<expr_aux> -> oprel {<expr_simple>.ids = <expr_aux>.ids} <expr_simple> | λ
+<expr_simple> -> {<termino>.ids = <expr_simple>.ids} <termino> {<resto_exsimple>.ids = <expr_simple>.ids} <resto_exsimple>
+			-> <signo> {<termino>.ids = <expr_simple>.ids} <termino> {<resto_exsimple>.ids = <expr_simple>.ids} <resto_exsimple>
+<resto_exsimple> -> opsuma {<termino>.ids = <resto_exsimple>.ids} <termino> {<resto_exsimple>1.ids = <resto_exsimple>.ids} <resto_exsimple>1
+				-> O {<termino>.ids = <resto_exsimple>.ids} <termino> {<resto_exsimple>1.ids = <resto_exsimple>.ids} <resto_exsimple>1 | λ
+<termino> -> {<factor>.ids = <termino>.ids} <factor> {<resto_term>.ids = <termino>.ids} <resto_term>
+<resto_term> -> opmult {<factor>.ids = <resto_term>.ids} <factor> {<resto_term>1.ids = <resto_term>.ids} <resto_term>1
+			-> Y {<factor>.ids = <resto_term>.ids} <factor> {<resto_term>1.ids = <resto_term>.ids} <resto_term>1 | λ
+<factor> -> {<variable>.ids = <factor>.ids} <variable> | num | ( {<expresion>.ids = <factor>.ids} <expresion> ) | NO {<factor>1.ids = <factor>.ids} <factor>1 | CIERTO | FALSO
 <signo> -> + | -
