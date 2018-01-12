@@ -19,8 +19,8 @@ class SynAna:
 
 	def analyzePrograma(self):
 		if (self.component == None):
-			return
-		if (self.component.cat == "PR" and self.component.valor == "PROGRAMA"):
+			self.errored = True
+		elif (self.component.cat == "PR" and self.component.valor == "PROGRAMA"):
 			self.advance()
 			ids = []
 			if (hasattr(self, 'component') and self.component.cat == "Identif"):
@@ -34,6 +34,7 @@ class SynAna:
 		else:
 			self.error(msg='PROGRAMA',
 				sync=set([None]))
+		return not self.errored
 
 	def analyzeDeclVar(self, **kwargs):
 		decl_var = kwargs
@@ -473,6 +474,7 @@ class SynAna:
 		#self.advance()
 
 	def error(self, **kwargs):
+		self.errored = True
 		print ("SINTAX TERROR: Line " + str(self.lexana.nlinea))
 		if 'msg' in kwargs:
 			print ("EXPECTED " + kwargs['msg'])
@@ -483,14 +485,17 @@ class SynAna:
 			self.sincroniza(sync=kwargs['sync'], spr=kwargs['spr'])
 	
 	def errorS(self, **kwargs):
+		self.errored = True
 		print ("Identificador repetido " + kwargs['id'])
 	
 	def errorBefore(self, **kwargs):
+		self.errored = True
 		print ("El identificador " + kwargs['id'] + " no ha sido declarado!")
 
 	def __init__(self, lexana):
 		self.lexana = lexana
 		self.endErr = False
+		self.errored = False
 		self.advance()
 
 
@@ -511,7 +516,11 @@ if __name__=="__main__":
 	analex=Analex(fl)
 	synana=SynAna(analex)
 	try:
-		synana.analyzePrograma()
+		result = synana.analyzePrograma()
+		if (result):
+			print ("NOICE!")
+		else:
+			print ("THE PROGRAM HAS ERRORS!")
 	except errores.Error, err:
 		sys.stderr.write("%s\n" % err)
 		analex.muestraError(sys.stderr)
