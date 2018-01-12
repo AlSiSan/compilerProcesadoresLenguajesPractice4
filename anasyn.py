@@ -27,8 +27,8 @@ class SynAna:
 				ids = [self.component.valor]
 			self.check(cat="Identif", sync=set([None, "PtoComa"]))
 			self.check(cat="PtoComa", sync=set([None, "PR"]), spr=set(["VAR", "PROC", "FUNCION", "INICIO"]))
-			self.analyzeDeclVar(ids=ids)
-			self.analyzeDeclSubprg()
+			ids = self.analyzeDeclVar(ids = ids)
+			self.analyzeDeclSubprg(ids = ids)
 			self.analyzeInstrucciones()
 			self.check(cat="Punto", sync=set([None]), endEx=True)
 		else:
@@ -36,57 +36,70 @@ class SynAna:
 				sync=set([None, "Identif"]))
 
 	def analyzeDeclVar(self, **kwargs):
+		ids = kwargs['ids']
 		if (self.component == None):
-			return
-		
+			return ids
+
 		if (self.component.cat == "PR" and self.component.valor == "VAR"):
 			self.advance()
-			self.analyzeListaId()
+			ids = self.analyzeListaId(ids = ids)
 			self.check(cat="DosPtos", sync=set([None, "PR"]), spr=set(["PROC", "FUNCION", "INICIO", "ENTERO", "REAL", "BOOLEANO", "VECTOR"]))
 			self.analyzeTipo()
 			self.check(cat="PtoComa", sync=set([None, "PR", "Identif"]), spr=set(["PROC", "FUNCION", "INICIO"]))
-			self.analyzeDeclV()
+			ids = self.analyzeDeclV(ids = ids)
 		elif (not (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION", "INICIO"] ))):
 			self.error(msg='VAR, PROC, FUNCION, INICIO',
 				sync=set([None, "PR"]),
 				spr=set(["PROC", "FUNCION", "INICIO"]))
+		return ids
 
-	def analyzeDeclV(self):
+	def analyzeDeclV(self, **kwargs):
+		ids = kwargs['ids']
 		if (self.component == None):
-			return
+			return ids
 		
 		if (self.component.cat == "Identif"):
-			self.analyzeListaId()
+			ids = self.analyzeListaId(ids = ids)
 			self.check(cat="DosPtos", sync=set([None, "PR"]), spr=set(["PROC", "FUNCION", "INICIO", "ENTERO", "REAL", "BOOLEANO", "VECTOR"]))
 			self.analyzeTipo()
 			self.check(cat="PtoComa", sync=set([None, "PR", "Identif"]), spr=set(["PROC", "FUNCION", "INICIO"]))
-			self.analyzeDeclV()
+			ids = self.analyzeDeclV(ids = ids)
 		elif (not (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION", "INICIO"] ))):
 			self.error(msg='Identif, PROC, FUNCION, INICIO',
 				sync=set([None, "PR"]),
 				spr=set(["PROC", "FUNCION", "INICIO"]))
+		return ids
 
-	def analyzeListaId(self):
+	def analyzeListaId(self, **kwargs):
+		ids = kwargs['ids']
 		if (self.component == None):
-			return
+			return ids
 
 		if (self.component.cat == "Identif"):
+			v = self.component.valor
+			if(v not in ids):
+				ids.append(v)
+			else:
+				self.errorS(id = v)
 			self.advance()
-			self.analyzeRestoListaId()
+			ids = self.analyzeRestoListaId(ids = ids)
 		else:
 			self.error(msg='Identif',
 				sync=set([None, "DosPtos"]))
+		return ids
 
-	def analyzeRestoListaId(self):
+	def analyzeRestoListaId(self, **kwargs):
+		ids = kwargs['ids']
 		if (self.component == None):
-			return
+			return ids
 		
 		if (self.component.cat == "Coma"):
 			self.advance()
-			self.analyzeListaId()
+			ids = self.analyzeListaId(ids = ids)
 		elif (not (self.component.cat == "DosPtos")):
 			self.error(msg='",", :',
 				sync=set([None, "DosPtos"]))
+		return ids
 
 	def analyzeTipo(self):
 		if (self.component == None):
@@ -115,30 +128,45 @@ class SynAna:
 			self.error(msg='ENTERO, REAL, BOOLEANO',
 				sync=set([None, "PtoComa"]))
 
-	def analyzeDeclSubprg(self):
+	def analyzeDeclSubprg(self, **kwargs):
+		ids = kwargs['ids']
 		if (self.component == None):
-			return
+			return ids
 
 		if (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION"] )):
-			self.analyzeDeclSub()
+			ids = self.analyzeDeclSub(ids = ids)
 			self.check(cat="PtoComa", sync=set([None, "PR"]), spr=set(["INICIO", "PROC", "FUNCION"]))
-			self.analyzeDeclSubprg()
+			ids = self.analyzeDeclSubprg(ids = ids)
 		elif (not (self.component.cat == "PR" and self.component.valor == "INICIO")):
 			self.error(msg='PROC, FUNCION, INICIO',
 				sync=set([None, "PR"]),
 				spr=set(["INICIO"]))
+		return ids
 
-	def analyzeDeclSub(self):
+	def analyzeDeclSub(self, **kwargs):
+		ids = kwargs['ids']
 		if (self.component == None):
-			return
+			return ids
 		
 		if (self.component.cat == "PR" and self.component.valor == "PROC"):
 			self.advance()
+			if (self.component.cat == "Identif"):
+				v = self.component.valor
+				if(v not in ids):
+					ids.append(v)
+				else:
+					self.errorS(id = v)
 			self.check(cat="Identif", sync=set([None, "PtoComa"]))
 			self.check(cat="PtoComa", sync=set([None, "PtoComa", "PR"]), spr=set(["INICIO"]))
 			self.analyzeInstrucciones()
 		elif (self.component.cat == "PR" and self.component.valor == "FUNCION"):
 			self.advance()
+			if (self.component.cat == "Identif"):
+				v = self.component.valor
+				if(v not in ids):
+					ids.append(v)
+				else:
+					self.errorS(id = v)
 			self.check(cat="Identif", sync=set([None, "PtoComa", "DosPtos"]))
 			self.check(cat="DosPtos", sync=set([None, "PtoComa", "PR"]), spr=set(["ENTERO", "REAL", "BOOLEANO"]))
 			self.analyzeTipoStd()
@@ -147,6 +175,7 @@ class SynAna:
 		else:
 			self.error(msg='PROC, FUNCION',
 				sync=set([None, "PtoComa"]))
+		return ids
 
 	def analyzeInstrucciones(self):
 		if (self.component == None):
@@ -393,6 +422,7 @@ class SynAna:
 	def check(self, **kwargs):
 		if (self.component == None):
 			return
+		mes = ''
 		if ('cat' in kwargs):
 			if (self.component.cat == kwargs['cat']):
 				mes = str(kwargs['cat'])
@@ -432,6 +462,9 @@ class SynAna:
 			self.sincroniza(sync=kwargs['sync'])
 		else:
 			self.sincroniza(sync=kwargs['sync'], spr=kwargs['spr'])
+	
+	def errorS(self, **kwargs):
+		print ("Identificador repetido " + kwargs['id'])
 
 	def __init__(self, lexana):
 		self.lexana = lexana
