@@ -21,7 +21,7 @@
 <instruccion> -> INICIO <lista_inst> FIN
 	      -> <inst_simple>
 	      -> <inst_e/s>
-	      -> SI <expresion> ENTONCES <instruccion> SINO <instruccion>
+	      -> SI <expresion> ENTONCES <instruccion> ; SINO <instruccion>
 	      -> MIENTRAS <expresion> HACER <instruccion>
 <inst_simple> -> id <resto_instsimple>
 <resto_instsimple> -> opasigna <expresion> | [ <expr_simple> ] opasigna <expresion> | λ

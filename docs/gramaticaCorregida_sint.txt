@@ -10,7 +10,7 @@
 <instrucciones> -> INICIO <lista_inst> FIN
 <lista_inst> -> <instruccion> ; <lista_inst> | λ
 <instruccion> -> INICIO <lista_inst> FIN | <inst_simple> | <inst_e/s>
-			  -> SI <expresion> ENTONCES <instruccion> SINO <instruccion>
+			  -> SI <expresion> ENTONCES <instruccion> ; SINO <instruccion>
 			  -> MIENTRAS <expresion> HACER <instruccion>
 <inst_simple> -> id <resto_instsimple>
 <resto_instsimple> -> opasigna <expresion> | [ <expr_simple> ] opasigna <expresion> | λ
@@ -26,7 +26,6 @@
 <factor> -> <variable> | num | ( <expresion> ) | NO <factor> | CIERTO | FALSO
 <signo> -> + | -
 
--> SI <expresion> ENTONCES <instruccion> ; SINO <instruccion>
 
 
 
