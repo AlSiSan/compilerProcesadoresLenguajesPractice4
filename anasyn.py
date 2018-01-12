@@ -29,7 +29,7 @@ class SynAna:
 			self.check(cat="PtoComa", sync=set([None, "PR"]), spr=set(["VAR", "PROC", "FUNCION", "INICIO"]))
 			decl_var = self.analyzeDeclVar(ids = ids)
 			decl_subprg = self.analyzeDeclSubprg(ids = decl_var['ids'])
-			self.analyzeInstrucciones()
+			self.analyzeInstrucciones(ids = decl_subprg['ids'])
 			self.check(cat="Punto", sync=set([None]), endEx=True)
 		else:
 			self.error(msg='PROGRAMA',
@@ -120,64 +120,62 @@ class SynAna:
 
 	def analyzeTipoStd(self):
 		if (self.component == None):
-			return
-
-		if (self.component.cat == "PR" and (self.component.valor in ["ENTERO", "REAL", "BOOLEANO"] )):
+			pass
+		elif (self.component.cat == "PR" and (self.component.valor in ["ENTERO", "REAL", "BOOLEANO"] )):
 			self.advance()
 		else:
 			self.error(msg='ENTERO, REAL, BOOLEANO',
 				sync=set([None, "PtoComa"]))
 
 	def analyzeDeclSubprg(self, **kwargs):
-		ids = kwargs['ids']
+		decl_subprg = kwargs
 		if (self.component == None):
-			return ids
-
-		if (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION"] )):
-			ids = self.analyzeDeclSub(ids = ids)
+			pass
+		elif (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION"] )):
+			decl_sub = self.analyzeDeclSub(ids = decl_subprg['ids'])
 			self.check(cat="PtoComa", sync=set([None, "PR"]), spr=set(["INICIO", "PROC", "FUNCION"]))
-			ids = self.analyzeDeclSubprg(ids = ids)
+			decl_subprg1 = self.analyzeDeclSubprg(ids = decl_sub['ids'])
+			decl_subprg['ids'] = decl_subprg1['ids']
 		elif (not (self.component.cat == "PR" and self.component.valor == "INICIO")):
 			self.error(msg='PROC, FUNCION, INICIO',
 				sync=set([None, "PR"]),
 				spr=set(["INICIO"]))
-		return ids
+		return decl_subprg
 
 	def analyzeDeclSub(self, **kwargs):
-		ids = kwargs['ids']
+		decl_sub = kwargs
 		if (self.component == None):
-			return ids
-		
-		if (self.component.cat == "PR" and self.component.valor == "PROC"):
+			pass
+		elif (self.component.cat == "PR" and self.component.valor == "PROC"):
 			self.advance()
 			if (self.component.cat == "Identif"):
 				v = self.component.valor
-				if(v not in ids):
-					ids.append(v)
+				if(v not in decl_sub['ids']):
+					decl_sub['ids'].append(v)
 				else:
 					self.errorS(id = v)
 			self.check(cat="Identif", sync=set([None, "PtoComa"]))
 			self.check(cat="PtoComa", sync=set([None, "PtoComa", "PR"]), spr=set(["INICIO"]))
-			self.analyzeInstrucciones()
+			self.analyzeInstrucciones(ids = decl_sub['ids'])
 		elif (self.component.cat == "PR" and self.component.valor == "FUNCION"):
 			self.advance()
 			if (self.component.cat == "Identif"):
 				v = self.component.valor
-				if(v not in ids):
-					ids.append(v)
+				if(v not in decl_sub['ids']):
+					decl_sub['ids'].append(v)
 				else:
 					self.errorS(id = v)
 			self.check(cat="Identif", sync=set([None, "PtoComa", "DosPtos"]))
 			self.check(cat="DosPtos", sync=set([None, "PtoComa", "PR"]), spr=set(["ENTERO", "REAL", "BOOLEANO"]))
 			self.analyzeTipoStd()
 			self.check(cat="PtoComa", sync=set([None, "PtoComa", "PR"]), spr=set(["INICIO"]))
-			self.analyzeInstrucciones()
+			self.analyzeInstrucciones(ids = decl_sub['ids'])
 		else:
 			self.error(msg='PROC, FUNCION',
 				sync=set([None, "PtoComa"]))
 		return ids
 
-	def analyzeInstrucciones(self):
+	def analyzeInstrucciones(self, **kwargs):
 		if (self.component == None):
 			return
 		
@@ -281,7 +279,7 @@ class SynAna:
 			self.check(cat="CorCi", sync=set([None, "PR", "OpMult", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
 				spr=set(["Y", "O", "ENTONCES", "HACER"]))
 		elif (not (self.component.cat in ["PtoComa", "CorCi", "ParentCi", "OpRel", "OpAdd", "OpMult"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "SINO", "HACER", "Y", "O"]))):
-			self.error(msg='[, ;, ], ), OpRel, OpAdd, OpMult, ENTONCES, SINO, HACER, Y, O',
+			self.error(msg='[, ;, ], ), OpRel, OpAdd, OpMult, ENTONCES, HACER, Y, O',
 				sync=set([None, "PR", "OpMult", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
 				spr=set(["Y", "O", "ENTONCES", "HACER"]))
 
