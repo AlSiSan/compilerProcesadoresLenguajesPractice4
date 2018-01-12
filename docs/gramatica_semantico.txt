@@ -4,8 +4,8 @@
 <decl_v> -> {<lista_id>.ids = <decl_v>.ids} <lista_id> : <tipo> ; {<decl_v>1.ids = <lista_id>.ids} <decl_v>1 {<decl_v>.ids = <decl_v>1.ids}
 	 -> λ
 <lista_id> -> id {if id.valor in <lista_id>.ids then ERROR(identif repetido);
-		  <lista_id>.ids.append(id.valor);
-		  <resto_listaid>.ids = <lista_id>.ids} <resto_listaid> {<lista_id>.ids = <resto_listaid>.ids}
+						else <lista_id>.ids.append(id.valor);
+				  <resto_listaid>.ids = <lista_id>.ids} <resto_listaid> {<lista_id>.ids = <resto_listaid>.ids}
 <resto_listaid> -> , {<lista_id>.ids = <resto_listaid>.ids} <lista_id> {<resto_listaid>.ids = <lista_id>.ids}
 		-> λ
 <tipo> -> <tipo_std> | VECTOR [ num ] de <tipo>

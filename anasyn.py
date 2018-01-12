@@ -23,12 +23,12 @@ class SynAna:
 		if (self.component.cat == "PR" and self.component.valor == "PROGRAMA"):
 			self.advance()
 			ids = []
-			if (hasattr(self, 'component') and hasattr(self.component, 'valor')):
+			if (hasattr(self, 'component') and self.component.cat == "Identif"):
 				ids = [self.component.valor]
 			self.check(cat="Identif", sync=set([None, "PtoComa"]))
 			self.check(cat="PtoComa", sync=set([None, "PR"]), spr=set(["VAR", "PROC", "FUNCION", "INICIO"]))
-			ids = self.analyzeDeclVar(ids = ids)
-			self.analyzeDeclSubprg(ids = ids)
+			decl_var = self.analyzeDeclVar(ids = ids)
+			decl_subprg = self.analyzeDeclSubprg(ids = decl_var['ids'])
 			self.analyzeInstrucciones()
 			self.check(cat="Punto", sync=set([None]), endEx=True)
 		else:
@@ -36,70 +36,70 @@ class SynAna:
 				sync=set([None, "Identif"]))
 
 	def analyzeDeclVar(self, **kwargs):
-		ids = kwargs['ids']
+		decl_var = kwargs
 		if (self.component == None):
-			return ids
-
-		if (self.component.cat == "PR" and self.component.valor == "VAR"):
+			pass
+		elif (self.component.cat == "PR" and self.component.valor == "VAR"):
 			self.advance()
-			ids = self.analyzeListaId(ids = ids)
+			lista_id = self.analyzeListaId(ids = decl_var['ids'])
 			self.check(cat="DosPtos", sync=set([None, "PR"]), spr=set(["PROC", "FUNCION", "INICIO", "ENTERO", "REAL", "BOOLEANO", "VECTOR"]))
 			self.analyzeTipo()
 			self.check(cat="PtoComa", sync=set([None, "PR", "Identif"]), spr=set(["PROC", "FUNCION", "INICIO"]))
-			ids = self.analyzeDeclV(ids = ids)
+			decl_v = self.analyzeDeclV(ids = lista_id['ids'])
+			decl_var['ids'] = decl_v['ids']
 		elif (not (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION", "INICIO"] ))):
 			self.error(msg='VAR, PROC, FUNCION, INICIO',
 				sync=set([None, "PR"]),
 				spr=set(["PROC", "FUNCION", "INICIO"]))
-		return ids
+		return decl_var
 
 	def analyzeDeclV(self, **kwargs):
-		ids = kwargs['ids']
+		decl_v = kwargs
 		if (self.component == None):
-			return ids
-		
-		if (self.component.cat == "Identif"):
-			ids = self.analyzeListaId(ids = ids)
+			pass
+		elif (self.component.cat == "Identif"):
+			lista_id = self.analyzeListaId(ids = decl_v['ids'])
 			self.check(cat="DosPtos", sync=set([None, "PR"]), spr=set(["PROC", "FUNCION", "INICIO", "ENTERO", "REAL", "BOOLEANO", "VECTOR"]))
 			self.analyzeTipo()
 			self.check(cat="PtoComa", sync=set([None, "PR", "Identif"]), spr=set(["PROC", "FUNCION", "INICIO"]))
-			ids = self.analyzeDeclV(ids = ids)
+			decl_v1 = self.analyzeDeclV(ids = lista_id['ids'])
+			decl_v['ids'] = decl_v1['ids']
 		elif (not (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION", "INICIO"] ))):
 			self.error(msg='Identif, PROC, FUNCION, INICIO',
 				sync=set([None, "PR"]),
 				spr=set(["PROC", "FUNCION", "INICIO"]))
-		return ids
+		return decl_v
 
 	def analyzeListaId(self, **kwargs):
-		ids = kwargs['ids']
+		lista_id = kwargs
 		if (self.component == None):
-			return ids
-
-		if (self.component.cat == "Identif"):
+			pass
+		elif (self.component.cat == "Identif"):
 			v = self.component.valor
-			if(v not in ids):
-				ids.append(v)
+			if(v not in lista_id['ids']):
+				lista_id['ids'].append(v)
 			else:
 				self.errorS(id = v)
 			self.advance()
-			ids = self.analyzeRestoListaId(ids = ids)
+			resto_listaid = self.analyzeRestoListaId(ids = lista_id['ids'])
+			lista_id['ids'] = resto_listaid['ids']
 		else:
 			self.error(msg='Identif',
 				sync=set([None, "DosPtos"]))
-		return ids
+		return lista_id
 
 	def analyzeRestoListaId(self, **kwargs):
-		ids = kwargs['ids']
+		resto_listaid = kwargs
 		if (self.component == None):
-			return ids
-		
-		if (self.component.cat == "Coma"):
+			pass
+		elif (self.component.cat == "Coma"):
 			self.advance()
-			ids = self.analyzeListaId(ids = ids)
+			lista_id = self.analyzeListaId(ids = resto_listaid['ids'])
+			resto_listaid['ids'] = lista_id['ids']
 		elif (not (self.component.cat == "DosPtos")):
 			self.error(msg='",", :',
 				sync=set([None, "DosPtos"]))
-		return ids
+		return resto_listaid
 
 	def analyzeTipo(self):
 		if (self.component == None):
