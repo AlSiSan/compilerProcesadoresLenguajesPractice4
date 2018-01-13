@@ -73,8 +73,6 @@ class Analex:
 					print ("ERROR: Comentario no cerrado")
 					return None
 				ch = self.flu.siguiente()
-			if (len(ch) != 0):
-				self.flu.devuelve()
 			return self.Analiza()
 		elif ch == "}":
 			print "ERROR: Comentario no abierto" # tenemos un comentario no abierto
