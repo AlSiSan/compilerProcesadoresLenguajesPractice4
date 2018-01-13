@@ -1,7 +1,7 @@
 PROGRAMA p1;
 VAR i,x:ENTERO;
 INICIO
-  i:=0.0;
+  i:=0.0; { Aqui habra error, i es ENTERO y no hay conversion implicita de REAL a ENTERO }
    MIENTRAS (i<>5) HACER
     INICIO 
       x:=i*4;

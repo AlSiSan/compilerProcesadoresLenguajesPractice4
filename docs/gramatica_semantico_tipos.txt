@@ -1,0 +1,147 @@
+<Programa> -> PROGRAMA id ; <decl_var> {<decl_subprg>.tipo_id = <decl_var>.tipo_id}
+										<decl_subprg> {<instrucciones>.tipo_id = <decl_subprg>.tipo_id;}
+										<instrucciones> .
+
+<decl_var> -> VAR <lista_id> : <tipo> ; <decl_v> {<decl_var>.tipo_id = <decl_v>.tipo_id;
+												  for id in <lista_id>.mids:
+												      <decl_var>.tipo_id[id] = <tipo>.tipo;
+												 }
+		   -> λ
+
+<decl_v> -> <lista_id> : <tipo> ; <decl_v>1 {<decl_v>.tipo_id = <decl_v>1.tipo_id;
+											 for id in <lista_id>.mids:
+											     <decl_v>.tipo_id[id] = <tipo>.tipo;
+											}
+		 -> λ
+
+<lista_id> -> id <resto_listaid> {<lista_id>.mids = <resto_listaid>.mids; <lista_id>.mids.append(id.valor)}
+
+<resto_listaid> -> , <lista_id> {<resto_listaid>.mids = <lista_id>.mids}
+				-> λ
+
+<tipo> -> <tipo_std> {<tipo>.tipo = <tipo_std>.tipo}
+	   -> VECTOR [ num ] de <tipo>1 {<tipo>.tipo = (4, <tipo>1.tipo)}
+
+<tipo_std> -> ENTERO {<tipo_std>.tipo = (0)}
+		   -> REAL {<tipo_std>.tipo = (1)}
+		   -> BOOLEANO {<tipo_std>.tipo = (2)}
+
+<decl_subprg> -> {<decl_sub>.tipo_id = <decl_subprg>.tipo_id} 
+				 <decl_sub> ; <decl_subprg>1 {<decl_subprg>.tipo_id = <decl_subprg>1.tipo_id;
+											  <decl_subprg>.tipo_id[<decl_sub>.id] = <decl_sub>.tipo}
+			  -> λ
+
+<decl_sub> -> PROC id {<decl_sub>.id = id.valor; <decl_sub>.tipo = (5); <decl_sub>.tipo_id[id.valor] = (5)}
+						; {<instrucciones>.tipo_id = <decl_sub>.tipo_id} <instrucciones>
+		   -> FUNCION id : <tipo_std> {<decl_sub>.id = id.valor; <decl_sub>.tipo = (6, <tipo_std>.tipo); <decl_sub>.tipo_id[id.valor] = (6, <tipo_std>.tipo)}
+									  ; {<instrucciones>.tipo_id = <decl_sub>.tipo_id} <instrucciones>
+
+<instrucciones> -> INICIO {<lista_inst>.tipo_id = <instrucciones>.tipo_id} <lista_inst> FIN
+
+<lista_inst> -> {<instruccion>.tipo_id = <lista_inst>.tipo_id} <instruccion> ; {<lista_inst>1.tipo_id = <lista_inst>.tipo_id} <lista_inst>1
+			 -> λ
+
+<instruccion> -> INICIO {<lista_inst>.tipo_id = <instruccion>.tipo_id} <lista_inst> FIN
+			  -> {<inst_simple>.tipo_id = <instruccion>.tipo_id} <inst_simple>
+			  -> {<inst_e/s>.tipo_id = <instruccion>.tipo_id} <inst_e/s>
+			  -> SI {<expresion>.tipo_id = <instruccion>.tipo_id} <expresion>
+					ENTONCES {<instruccion>1.tipo_id = <instruccion>.tipo_id} <instruccion>1 ;
+					SINO {<instruccion>2.tipo_id = <instruccion>.tipo_id} <instruccion>2
+			  -> MIENTRAS {<expresion>.tipo_id = <instruccion>.tipo_id} <expresion>
+					HACER {<instruccion>1.tipo_id = <instruccion>.tipo_id} <instruccion>1
+
+<inst_simple> -> id {<resto_instsimple>.tipo = <inst_simple>.tipo_id[id.valor];
+					 <resto_instsimple>.id = id.valor
+					 <resto_instsimple>.tipo_id = <inst_simple>.tipo_id} <resto_instsimple>
+
+<resto_instsimple> -> opasigna {<expresion>.tipo_id = <resto_instsimple>.tipo_id} <expresion>
+						{if <expresion>.tipo != <resto_instsimple>.tipo and !(<resto_instsimple>.tipo[0] == 1 and <expresion>.tipo[0] == 0)
+							then ERROR(No se puede pasar de <expresion>.tipo a <resto_instsimple>.tipo)}
+				   -> {if <resto_instsimple>.tipo[0] != 4 then ERROR(No es un VECTOR)}
+						[ { <expr_simple>.tipo_id = <resto_instsimple>.tipo_id } <expr_simple>
+						{ if <expr_simple>.tipo[0] != 0 then ERROR(Se debe usar un ENTERO en los accesos a VECTOR) }
+						] opasigna {<expresion>.tipo_id = <resto_instsimple>.tipo_id}
+						<expresion> {if <expresion>.tipo != <resto_instsimple>.tipo and !(<resto_instsimple>.tipo[1][0] == 1 and <expresion>.tipo[0] == 0)
+							then ERROR(No se puede pasar de <expresion>.tipo a <resto_instsimple>.tipo)}
+				   -> λ
+
+<variable> -> id <resto_var> {if <resto_var>.vector == 0
+								then <variable>.tipo = <variable>.tipo_id[id.valor]
+								else if <variable>.tipo_id[id.valor][0] == 4
+										then <variable>.tipo = <variable>.tipo_id[id.valor][1]
+										else ERROR(NO ES UN VECTOR)}
+
+<resto_var> -> [ <expr_simple> ]
+			-> λ
+
+<inst_e/s> -> LEE ( id )
+		   -> ESCRIBE ( {<expr_simple>.tipo_id = <inst_e/s>.tipo_id} <expr_simple> )
+
+<expresion> -> {<expr_simple>.tipo_id = <expresion>.tipo_id} <expr_simple>
+				{<expr_aux>.tipo = <expr_simple>.tipo;
+				 <expr_aux>.tipo_id = <expresion>.tipo_id} <expr_aux>
+				{<expresion>.tipo = <expr_aux>.tipo}
+
+<expr_aux> -> oprel {<expr_simple>.tipo_id = <expr_aux>.tipo_id}
+				<expr_simple> {if <expr_aux>.tipo[0] <= 1 && <expr_simple>.tipo[0] <= 1
+								then <expr_aux>.tipo = (2)
+								else ERROR(<expr_aux>.tipo and <expr_simple>.tipo are not comparable)}
+		   -> λ
+
+<expr_simple> -> {<termino>.tipo_id = <expr_simple>.tipo_id} <termino>
+					{<resto_exsimple>.tipo_id = <expr_simple>.tipo_id} <resto_exsimple>
+					{if <termino>.tipo[0] <= 1 && <resto_exsimple>.tipo[0] <= 1
+						then <expr_simple>.tipo = (max(<termino>.tipo[0], <resto_exsimple>.tipo[0]))
+						else if <termino>.tipo == <resto_exsimple>.tipo
+								then <expr_simple>.tipo = <termino>.tipo
+								else ERROR(<termino>.tipo and <resto_exsimple>.tipo are not compatible)}
+			  -> <signo> {<termino>.tipo_id = <expr_simple>.tipo_id} <termino>
+					{<resto_exsimple>.tipo_id = <expr_simple>.tipo_id} <resto_exsimple>
+					{if <termino>.tipo[0] <= 1 && <resto_exsimple>.tipo[0] <= 1
+						then <expr_simple>.tipo = (max(<termino>.tipo[0], <resto_exsimple>.tipo[0]))
+						else if <termino>.tipo == <resto_exsimple>.tipo
+								then <expr_simple>.tipo = <termino>.tipo
+								else ERROR(<termino>.tipo and <resto_exsimple>.tipo are not compatible)}
+
+<resto_exsimple> -> opsuma {<termino>.tipo_id = <resto_exsimple>.tipo_id} <termino>
+					{<resto_exsimple>1.tipo_id = <resto_exsimple>.tipo_id} <resto_exsimple>1
+					{if <termino>.tipo[0] <= 1 && <resto_exsimple>1.tipo[0] <= 1
+						then <resto_exsimple>.tipo = (max(<termino>.tipo[0], <resto_exsimple>1.tipo[0]))
+						else ERROR(<termino>.tipo and <resto_exsimple>1.tipo are not compatible)}
+				 -> O {<termino>.tipo_id = <resto_exsimple>.tipo_id} <termino>
+					{<resto_exsimple>1.tipo_id = <resto_exsimple>.tipo_id} <resto_exsimple>1
+					{if <termino>.tipo[0] == 2 && <resto_exsimple>1.tipo[0] == 2
+						then <resto_exsimple>.tipo = (2)
+						else ERROR(<termino>.tipo and <resto_exsimple>1.tipo are not compatible)}
+				 -> λ
+
+<termino> -> {<factor>.tipo_id = <termino>.tipo_id} <factor>
+				{<resto_term>.tipo_id = <termino>.tipo_id} <resto_term>
+				{if <factor>.tipo[0] <= 1 && <resto_term>.tipo[0] <= 1
+						then <termino>.tipo = (max(<factor>.tipo[0], <resto_term>.tipo[0]))
+						else if <factor>.tipo == <resto_term>.tipo
+								then <termino>.tipo = <factor>.tipo
+								else ERROR(<factor>.tipo and <resto_term>.tipo are not compatible)}
+
+<resto_term> -> opmult {<factor>.tipo_id = <resto_term>.tipo_id} <factor>
+				{<resto_term>1.tipo_id = <resto_term>.tipo_id} <resto_term>1
+				{if <factor>.tipo[0] <= 1 && <resto_term>1.tipo[0] <= 1
+						then <resto_term>.tipo = (max(<factor>.tipo[0], <resto_term>1.tipo[0]))
+						else ERROR(<factor>.tipo and <resto_term>1.tipo are not compatible)}
+			 -> Y {<factor>.tipo_id = <resto_term>.tipo_id} <factor>
+				{<resto_term>1.tipo_id = <resto_term>.tipo_id} <resto_term>1
+				{if <factor>.tipo[0] == 2 && <resto_term>1.tipo[0] == 2
+						then <resto_term>.tipo = (max(<factor>.tipo[0], <resto_term>1.tipo[0]))
+						else ERROR(<factor>.tipo and <resto_term>1.tipo are not compatible)}
+			 -> λ
+
+<factor> -> {<variable>.tipo_id = <factor>.tipo_id} <variable> {<factor>.tipo = <variable>.tipo}
+		 -> num {if num.isInt == 0 then <factor>.tipo = (1) else <factor>.tipo = (0)}
+		 -> ( {<expresion>.tipo_id = <factor>.tipo_id} <expresion> ) {<factor>.tipo = <expresion>.tipo}
+		 -> NO {<factor>1.tipo_id = <factor>.tipo_id}
+			<factor>1 {<factor>.tipo = (2); if <factor>1.tipo != (2) then ERROR(NO BOOLEANO)}
+		 -> CIERTO
+		 -> FALSO
+
+<signo> -> +
+		-> -

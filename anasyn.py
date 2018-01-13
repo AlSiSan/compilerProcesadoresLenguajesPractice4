@@ -28,8 +28,8 @@ class SynAna:
 			self.check(cat="Identif", sync=set([None, "PtoComa"]))
 			self.check(cat="PtoComa", sync=set([None, "PR"]), spr=set(["VAR", "PROC", "FUNCION", "INICIO"]))
 			decl_var = self.analyzeDeclVar(ids = ids)
-			decl_subprg = self.analyzeDeclSubprg(ids = decl_var['ids'])
-			self.analyzeInstrucciones(ids = decl_subprg['ids'])
+			decl_subprg = self.analyzeDeclSubprg(ids = decl_var['ids'], tipo_id = decl_var['tipo_id'])
+			self.analyzeInstrucciones(ids = decl_subprg['ids'], tipo_id = decl_subprg['tipo_id'])
 			self.check(cat="Punto", sync=set([None]), endEx=True)
 		else:
 			self.error(msg='PROGRAMA',
@@ -44,9 +44,15 @@ class SynAna:
 			self.advance()
 			lista_id = self.analyzeListaId(ids = decl_var['ids'])
 			self.check(cat="DosPtos", sync=set([None, "PR"]), spr=set(["PROC", "FUNCION", "INICIO", "ENTERO", "REAL", "BOOLEANO", "VECTOR"]))
-			self.analyzeTipo()
+			tipo = self.analyzeTipo()
 			self.check(cat="PtoComa", sync=set([None, "PR", "Identif"]), spr=set(["PROC", "FUNCION", "INICIO"]))
 			decl_v = self.analyzeDeclV(ids = lista_id['ids'])
+			decl_var['tipo_id'] = {}
+			if 'tipo_id' in decl_v:
+				decl_var['tipo_id'] = decl_v['tipo_id']
+			if 'mids' in lista_id:
+				for id in lista_id['mids']:
+					decl_var['tipo_id'][id] = tipo['tipo']
 			decl_var['ids'] = decl_v['ids']
 		elif (not (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION", "INICIO"] ))):
 			self.error(msg='VAR, PROC, FUNCION, INICIO',
@@ -61,9 +67,15 @@ class SynAna:
 		elif (self.component.cat == "Identif"):
 			lista_id = self.analyzeListaId(ids = decl_v['ids'])
 			self.check(cat="DosPtos", sync=set([None, "PR"]), spr=set(["PROC", "FUNCION", "INICIO", "ENTERO", "REAL", "BOOLEANO", "VECTOR"]))
-			self.analyzeTipo()
+			tipo = self.analyzeTipo()
 			self.check(cat="PtoComa", sync=set([None, "PR", "Identif"]), spr=set(["PROC", "FUNCION", "INICIO"]))
 			decl_v1 = self.analyzeDeclV(ids = lista_id['ids'])
+			decl_v['tipo_id'] = {}
+			if 'tipo_id' in decl_v1:
+				decl_v['tipo_id'] = decl_v1['tipo_id']
+			if 'mids' in lista_id:
+				for id in lista_id['mids']:
+					decl_v['tipo_id'] = tipo['tipo']
 			decl_v['ids'] = decl_v1['ids']
 		elif (not (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION", "INICIO"] ))):
 			self.error(msg='Identif, PROC, FUNCION, INICIO',
@@ -83,6 +95,10 @@ class SynAna:
 				self.errorS(id = v)
 			self.advance()
 			resto_listaid = self.analyzeRestoListaId(ids = lista_id['ids'])
+			lista_id['mids'] = []
+			if 'mids' in resto_listaid:
+				lista_id['mids'] = resto_listaid['mids']
+			lista_id['mids'].append(v)
 			lista_id['ids'] = resto_listaid['ids']
 		else:
 			self.error(msg='Identif',
@@ -96,6 +112,7 @@ class SynAna:
 		elif (self.component.cat == "Coma"):
 			self.advance()
 			lista_id = self.analyzeListaId(ids = resto_listaid['ids'])
+			resto_listaid['mids'] = lista_id['mids']
 			resto_listaid['ids'] = lista_id['ids']
 		elif (not (self.component.cat == "DosPtos")):
 			self.error(msg='",", :',
@@ -112,9 +129,11 @@ class SynAna:
 			self.check(cat="Numero", sync=set([None, "PtoComa", "CorCi"]))
 			self.check(cat="CorCi", sync=set([None, "PtoComa", "PR"]), spr=set(["DE"]))
 			self.check(cat="PR", valor="DE", sync=set([None, "PtoComa", "PR"]), spr=set(["ENTERO", "REAL", "BOOLEANO", "VECTOR"]))
-			self.analyzeTipo()
+			tipo1 = self.analyzeTipo()
+			tipo['tipo'] = (4, tipo1['tipo'])
 		elif (self.component.cat == "PR" and (self.component.valor in ["ENTERO", "REAL", "BOOLEANO"] )):
-			self.analyzeTipoStd()
+			tipo_std = self.analyzeTipoStd()
+			tipo['tipo'] = tipo_std['tipo']
 		else:
 			self.error(msg='VECTOR, ENTERO, REAL, BOOLEANO',
 				sync=set([None, "PtoComa"]))
@@ -125,6 +144,12 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat == "PR" and (self.component.valor in ["ENTERO", "REAL", "BOOLEANO"] )):
+			if self.component.valor == "ENTERO":
+				tipo_std['tipo'] = (0,)
+			elif self.component.valor == "REAL":
+				tipo_std['tipo'] = (1,)
+			else:
+				tipo_std['tipo'] = (2,)
 			self.advance()
 		else:
 			self.error(msg='ENTERO, REAL, BOOLEANO',
@@ -136,9 +161,12 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat == "PR" and (self.component.valor in ["PROC", "FUNCION"] )):
-			decl_sub = self.analyzeDeclSub(ids = decl_subprg['ids'])
+			decl_sub = self.analyzeDeclSub(ids = decl_subprg['ids'], tipo_id = decl_subprg['tipo_id'])
 			self.check(cat="PtoComa", sync=set([None, "PR"]), spr=set(["INICIO", "PROC", "FUNCION"]))
 			decl_subprg1 = self.analyzeDeclSubprg(ids = decl_sub['ids'])
+			if 'tipo_id' in decl_subprg1:
+				decl_subprg['tipo_id'] = decl_subprg1['tipo_id']
+			decl_subprg['tipo_id'][decl_sub['id']] = decl_sub['tipo']
 			decl_subprg['ids'] = decl_subprg1['ids']
 		elif (not (self.component.cat == "PR" and self.component.valor == "INICIO")):
 			self.error(msg='PROC, FUNCION, INICIO',
@@ -160,7 +188,10 @@ class SynAna:
 					self.errorS(id = v)
 			self.check(cat="Identif", sync=set([None, "PtoComa"]))
 			self.check(cat="PtoComa", sync=set([None, "PtoComa", "PR"]), spr=set(["INICIO"]))
-			self.analyzeInstrucciones(ids = decl_sub['ids'])
+			decl_sub['id'] = v
+			decl_sub['tipo'] = (5, )
+			decl_sub['tipo_id'][v] = (5, )
+			self.analyzeInstrucciones(ids = decl_sub['ids'], tipo_id = decl_sub['tipo_id'])
 		elif (self.component.cat == "PR" and self.component.valor == "FUNCION"):
 			self.advance()
 			if (self.component.cat == "Identif"):
@@ -171,9 +202,12 @@ class SynAna:
 					self.errorS(id = v)
 			self.check(cat="Identif", sync=set([None, "PtoComa", "DosPtos"]))
 			self.check(cat="DosPtos", sync=set([None, "PtoComa", "PR"]), spr=set(["ENTERO", "REAL", "BOOLEANO"]))
-			self.analyzeTipoStd()
+			tipo_std = self.analyzeTipoStd()
 			self.check(cat="PtoComa", sync=set([None, "PtoComa", "PR"]), spr=set(["INICIO"]))
-			self.analyzeInstrucciones(ids = decl_sub['ids'])
+			decl_sub['id'] = v
+			decl_sub['tipo'] = (6, tipo_std['tipo'])
+			decl_sub['tipo_id'][v] = (6, tipo_std['tipo'])
+			self.analyzeInstrucciones(ids = decl_sub['ids'], tipo_id = decl_sub['tipo_id'])
 		else:
 			self.error(msg='PROC, FUNCION',
 				sync=set([None, "PtoComa"]))
@@ -185,7 +219,7 @@ class SynAna:
 			pass
 		elif (self.component.cat == "PR" and self.component.valor == "INICIO"):
 			self.advance()
-			self.analyzeListaInst(ids = instrucciones['ids'])
+			self.analyzeListaInst(ids = instrucciones['ids'], tipo_id = instrucciones['tipo_id'])
 			self.check(cat="PR", valor="FIN", sync=set([None, "Punto", "PtoComa"]))
 		else:
 			self.error(msg='INICIO',
@@ -197,9 +231,9 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat == "Identif" or (self.component.cat == "PR" and self.component.valor in ["INICIO", "SI", "MIENTRAS", "LEE", "ESCRIBE"])):
-			self.analyzeInstruccion(ids = lista_inst['ids'])
+			instruccion = self.analyzeInstruccion(ids = lista_inst['ids'], tipo_id = lista_inst['tipo_id'])
 			self.check(cat="PtoComa", sync=set([None, "Identif", "PR"]), spr=set(["FIN", "INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]))
-			self.analyzeListaInst(ids = lista_inst['ids'])
+			lista_inst1 = self.analyzeListaInst(ids = lista_inst['ids'], tipo_id = lista_inst['tipo_id'])
 		elif (not (self.component.cat == "PR" and self.component.valor == "FIN")):
 			self.error(msg='Identif, INICIO, SI, MIENTRAS, LEE, ESCRIBE, FIN',
 				sync=set([None, "PR"]),
@@ -211,26 +245,26 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat == "Identif"):
-			self.analyzeInstSimple(ids = instruccion['ids'])
+			self.analyzeInstSimple(ids = instruccion['ids'], tipo_id = instruccion['tipo_id'])
 		elif (self.component.cat == "PR" and self.component.valor == "INICIO"):
 			self.advance()
-			self.analyzeListaInst(ids = instruccion['ids'])
+			self.analyzeListaInst(ids = instruccion['ids'], tipo_id = instruccion['tipo_id'])
 			self.check(cat="PR", valor="FIN", sync=set([None, "PtoComa"]))
 		elif (self.component.cat == "PR" and self.component.valor == "SI"):
 			self.advance()
-			self.analyzeExpresion(ids = instruccion['ids'])
+			self.analyzeExpresion(ids = instruccion['ids'], tipo_id = instruccion['tipo_id'])
 			self.check(cat="PR", valor="ENTONCES", sync=set([None, "Identif", "PtoComa", "PR"]), spr=set(["SINO", "INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]))
-			self.analyzeInstruccion(ids = instruccion['ids'])
+			self.analyzeInstruccion(ids = instruccion['ids'], tipo_id = instruccion['tipo_id'])
 			self.check(cat="PtoComa", sync=set([None, "PtoComa", "PR"]), spr=set(["SINO"]))
 			self.check(cat="PR", valor="SINO", sync=set([None, "Identif", "PtoComa", "PR"]), spr=set(["SINO", "INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]))
-			self.analyzeInstruccion(ids = instruccion['ids'])
+			self.analyzeInstruccion(ids = instruccion['ids'], tipo_id = instruccion['tipo_id'])
 		elif (self.component.cat == "PR" and self.component.valor == "MIENTRAS"):
 			self.advance()
-			self.analyzeExpresion(ids = instruccion['ids'])
+			self.analyzeExpresion(ids = instruccion['ids'], tipo_id = instruccion['tipo_id'])
 			self.check(cat="PR", valor="HACER", sync=set([None, "Identif", "PtoComa", "PR"]), spr=set(["INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]))
-			self.analyzeInstruccion(ids = instruccion['ids'])
+			self.analyzeInstruccion(ids = instruccion['ids'], tipo_id = instruccion['tipo_id'])
 		elif (self.component.cat == "PR" and self.component.valor in ["LEE", "ESCRIBE"]):
-			self.analyzeInstES(ids = instruccion['ids'])
+			self.analyzeInstES(ids = instruccion['ids'], tipo_id = instruccion['tipo_id'])
 		else:
 			self.error(msg='Identif, INICIO, SI, MIENTRAS, LEE, ESCRIBE',
 				sync=set([None, "PtoComa"]))
@@ -241,10 +275,14 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat == "Identif"):
-			if (self.component.valor not in inst_simple['ids']):
-				self.errorBefore(id = self.component.valor)
+			v = self.component.valor
+			if (v not in inst_simple['ids']):
+				self.errorBefore(id = v)
 			self.advance()
-			self.analyzeRestoInstSimple(ids = inst_simple['ids'])
+			self.analyzeRestoInstSimple(ids = inst_simple['ids'],
+										tipo = inst_simple['tipo_id'][v],
+										tipo_id = inst_simple['tipo_id'],
+										id = v)
 		else:
 			self.error(msg='Identif',
 				sync=set([None, "PtoComa"]))
@@ -255,14 +293,22 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat == "CorAp"):
+			if resto_instsimple['tipo'][0] != 4:
+				self.errorNotVector(id = resto_instsimple['id'])
 			self.advance()
-			self.analyzeExprSimple(ids = resto_instsimple['ids'])
+			expr_simple = self.analyzeExprSimple(ids = resto_instsimple['ids'], tipo_id = resto_instsimple['tipo_id'])
+			if expr_simple['tipo'][0] != 0:
+				self.errorAVector()
 			self.check(cat="CorCi", sync=set([None, "PtoComa", "OpAsigna"]))
 			self.check(cat="OpAsigna", sync=set([None, "PtoComa", "PR", "Identif", "Numero", "ParentAp", "OpAdd"]), spr=set(["NO", "CIERTO", "FALSO"]))
-			self.analyzeExpresion(ids = resto_instsimple['ids'])
+			expresion = self.analyzeExpresion(ids = resto_instsimple['ids'], tipo_id = resto_instsimple['tipo_id'])
+			if (expresion['tipo'] != resto_instsimple['tipo'][1] and not (resto_instsimple['tipo'][1][0] == 1 and expresion['tipo'][0] == 0)):
+				self.errorCast(tipo1 = expresion['tipo'][0], tipo2 = resto_instsimple['tipo'][1][0])
 		elif (self.component.cat == "OpAsigna"):
 			self.advance()
-			self.analyzeExpresion(ids = resto_instsimple['ids'])
+			expresion = self.analyzeExpresion(ids = resto_instsimple['ids'], tipo_id = resto_instsimple['tipo_id'])
+			if (expresion['tipo'] != resto_instsimple['tipo'] and not (resto_instsimple['tipo'][0] == 1 and expresion['tipo'][0] == 0)):
+				self.errorCast(tipo1 = expresion['tipo'][0], tipo2 = resto_instsimple['tipo'][0])
 		elif (not (self.component.cat == "PtoComa" or (self.component.cat == "PR" and self.component.valor == "SINO"))):
 			self.error(msg='[, OpAsigna, ;',
 				sync=set([None, "PtoComa"]))
@@ -273,20 +319,30 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat == "Identif"):
-			if (self.component.valor not in variable['ids']):
-				self.errorBefore(id = self.component.valor)
+			v = self.component.valor
+			if (v not in variable['ids']):
+				self.errorBefore(id = v)
 			self.advance()
-			self.analyzeRestoVar(ids = variable['ids'])
+			resto_var = self.analyzeRestoVar(ids = variable['ids'])
+			if resto_var['vector'] == 0:
+				variable['tipo'] = variable['tipo_id'][v]
+			elif variable['tipo_id'][v][0] == 4:
+				variable['tipo'] = variable['tipo_id'][v][1]
+			else:
+				self.errorNotVector(id = v)
 		else:
 			self.error(msg='Identif',
 				sync=set([None, "PR", "OpMult", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
 				spr=set(["Y", "O", "ENTONCES", "HACER"]))
+		return variable
 
 	def analyzeRestoVar(self, **kwargs):
 		resto_var = kwargs
+		resto_var['vector'] = 0
 		if (self.component == None):
 			pass
 		elif (self.component.cat == "CorAp"):
+			resto_var['vector'] = 1
 			self.advance()
 			self.analyzeExprSimple(ids = resto_var['ids'])
 			self.check(cat="CorCi", sync=set([None, "PR", "OpMult", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
@@ -312,7 +368,7 @@ class SynAna:
 		elif (self.component.cat == "PR" and self.component.valor == "ESCRIBE"):
 			self.advance()
 			self.check(cat="ParentAp", sync=set([None, "Identif", "Numero", "OpAdd", "ParentAp", "PtoComa", "PR"]), spr=set(["NO", "CIERTO", "FALSO"]))
-			self.analyzeExprSimple(ids = inst_es['ids'])
+			self.analyzeExprSimple(ids = inst_es['ids'], tipo_id = inst_es['tipo_id'])
 			self.check(cat="ParentCi", sync=set([None, "PtoComa"]))
 		else:
 			self.error(msg='LEE, ESCRIBE',
@@ -324,8 +380,9 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat in ["Identif", "Numero", "ParentAp", "OpAdd"] or (self.component.cat == "PR" and self.component.valor in ["NO", "CIERTO", "FALSO"])):
-			self.analyzeExprSimple(ids = expresion['ids'])
-			self.analyzeExprAux(ids = expresion['ids'])
+			expr_simple = self.analyzeExprSimple(ids = expresion['ids'], tipo_id = expresion['tipo_id'])
+			expr_aux = self.analyzeExprAux(ids = expresion['ids'], tipo_id = expresion['tipo_id'], tipo = expr_simple['tipo'])
+			expresion['tipo'] = expr_aux['tipo']
 		else:
 			self.error(msg='Identif, Numero, (, OpAdd, NO, CIERTO, FALSO',
 				sync=set([None, "PR", "ParentCi", "PtoComa"]),
@@ -338,7 +395,11 @@ class SynAna:
 			pass
 		elif (self.component.cat == "OpRel"):
 			self.advance()
-			self.analyzeExprSimple(ids = expr_aux['ids'])
+			expr_simple = self.analyzeExprSimple(ids = expr_aux['ids'], tipo_id = expr_aux['tipo_id'])
+			if (expr_aux['tipo'][0] <= 1 and expr_simple['tipo'][0] <= 1):
+				expr_aux['tipo'] = (2, )
+			else:
+				self.errorComp(tipo1 = expr_aux['tipo'][0], tipo2 = expr_simple['tipo'][0])
 		elif (not (self.component.cat in ["PtoComa", "ParentCi"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "HACER"]))):
 			self.error(msg='OpRel, ;, ), ENTONCES, HACER',
 				sync=set([None, "PR", "ParentCi", "PtoComa"]),
@@ -350,12 +411,36 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat in ["Identif", "Numero", "ParentAp"] or (self.component.cat == "PR" and self.component.valor in ["NO", "CIERTO", "FALSO"])):
-			self.analyzeTermino(ids = expr_simple['ids'])
-			self.analyzeRestoExSimple(ids = expr_simple['ids'])
+			termino = self.analyzeTermino(ids = expr_simple['ids'], tipo_id = expr_simple['tipo_id'])
+			resto_exsimple = self.analyzeRestoExSimple(ids = expr_simple['ids'], tipo_id = expr_simple['tipo_id'])
+			if ('tipo' in resto_exsimple):
+				if (termino['tipo'][0] <= 1 and resto_exsimple['tipo'][0] <= 1):
+					expr_simple['tipo'] = (max(termino['tipo'][0], resto_exsimple['tipo'][0]), )
+				elif (termino['tipo'] == resto_exsimple['tipo'] and termino['tipo'][0] == 2):
+					expr_simple['tipo'] = termino['tipo']
+				else:
+					self.errorCompat(tipo1 = termino['tipo'][0], tipo2 = resto_exsimple['tipo'][0])
+			else:
+				if (termino['tipo'][0] <= 2):
+					expr_simple['tipo'] = termino['tipo']
+				else:
+					self.errorCompat(tipo1 = termino['tipo'][0], tipo2 = -1)
 		elif(self.component.cat == "OpAdd"):
 			self.analyzeSigno()
-			self.analyzeTermino(ids = expr_simple['ids'])
-			self.analyzeRestoExSimple(ids = expr_simple['ids'])
+			termino = self.analyzeTermino(ids = expr_simple['ids'], tipo_id = expr_simple['tipo_id'])
+			resto_exsimple = self.analyzeRestoExSimple(ids = expr_simple['ids'], tipo_id = expr_simple['tipo_id'])
+			if ('tipo' in resto_exsimple):
+				if (termino['tipo'][0] <= 1 and resto_exsimple['tipo'][0] <= 1):
+					expr_simple['tipo'] = (max(termino['tipo'][0], resto_exsimple['tipo'][0]), )
+				elif (termino['tipo'] != resto_exsimple['tipo']):
+					self.errorCompat(tipo1 = termino['tipo'][0], tipo2 = resto_exsimple['tipo'][0])
+				else:
+					self.errorUnsigned(tipo = termino['tipo'][0])
+			else:
+				if (termino['tipo'][0] <= 1):
+					expr_simple['tipo'] = termino['tipo']
+				else:
+					self.errorUnsigned(tipo = termino['tipo'][0])
 		else:
 			self.error(msg='Identif, Numero, (, NO, CIERTO, FALSO',
 				sync=set([None, "PR", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
@@ -367,9 +452,24 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat == "OpAdd" or (self.component.cat == "PR" and self.component.valor in ["O"])):
+			cat = self.component.cat
 			self.advance()
-			self.analyzeTermino(ids = resto_exsimple['ids'])
-			self.analyzeRestoExSimple(ids = resto_exsimple['ids'])
+			termino = self.analyzeTermino(ids = resto_exsimple['ids'], tipo_id = resto_exsimple['tipo_id'])
+			resto_exsimple1 = self.analyzeRestoExSimple(ids = resto_exsimple['ids'], tipo_id = resto_exsimple['tipo_id'])
+			if 'tipo' in resto_exsimple1:
+				if (termino['tipo'][0] <= 1 and resto_exsimple1['tipo'][0] <= 1 and cat == "OpAdd"):
+					resto_exsimple['tipo'] = (max(termino['tipo'][0], resto_exsimple1['tipo'][0]), )
+				elif (termino['tipo'] == resto_exsimple1['tipo'] and termino['tipo'][0] == 2 and cat == "PR"):
+					resto_exsimple['tipo'] = (2, )
+				else:
+					self.errorCompat(tipo1 = termino['tipo'][0], tipo2 = resto_exsimple1['tipo'][0])
+			else:
+				if (termino['tipo'][0] <= 1 and cat == "OpAdd"):
+					resto_exsimple['tipo'] = termino['tipo']
+				elif (termino['tipo'][0] == 2 and cat == "PR"):
+					resto_exsimple['tipo'] = (2, )
+				else:
+					self.errorCompat(tipo1 = termino['tipo'][0], tipo2 = -1)
 		elif (not (self.component.cat in ["PtoComa", "CorCi", "ParentCi", "OpRel"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "HACER"]))):
 			self.error(msg='OpAdd, O, ;, ], ), OpRel, ENTONCES, HACER',
 				sync=set([None, "PR", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
@@ -381,8 +481,21 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat in ["Identif", "Numero", "ParentAp"] or (self.component.cat == "PR" and self.component.valor in ["NO", "CIERTO", "FALSO"])):
-			self.analyzeFactor(ids = termino['ids'])
-			self.analyzeRestoTerm(ids = termino['ids'])
+			factor = self.analyzeFactor(ids = termino['ids'], tipo_id = termino['tipo_id'])
+			resto_term = self.analyzeRestoTerm(ids = termino['ids'], tipo_id = termino['tipo_id'])
+			if 'tipo' in resto_term:
+				if (factor['tipo'][0] <= 1 and resto_term['tipo'][0] <= 1):
+					termino['tipo'] = (max(factor['tipo'][0], resto_term['tipo'][0]), )
+				elif (factor['tipo'] == resto_term['tipo'] and factor['tipo'][0] == 2):
+					termino['tipo'] = (2, )
+				else:
+					self.errorCompat(tipo1 = factor['tipo'][0], tipo2 = resto_term['tipo'][0])
+			else:
+				if (factor['tipo'][0] <= 2):
+					termino['tipo'] = factor['tipo']
+				else:
+					self.errorCompat(tipo1 = factor['tipo'][0], tipo2 = -1)
+
 		else:
 			self.error(msg='Identif, Numero, (, NO, CIERTO, FALSO',
 				sync=set([None, "PR", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
@@ -394,9 +507,24 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat == "OpMult" or (self.component.cat == "PR" and self.component.valor in ["Y"])):
+			cat = self.component.cat
 			self.advance()
-			self.analyzeFactor(ids = resto_term['ids'])
-			self.analyzeRestoTerm(ids = resto_term['ids'])
+			factor = self.analyzeFactor(ids = resto_term['ids'], tipo_id = resto_term['tipo_id'])
+			resto_term1 = self.analyzeRestoTerm(ids = resto_term['ids'], tipo_id = resto_term['tipo_id'])
+			if 'tipo' in resto_term1:
+				if (factor['tipo'][0] <= 1 and resto_term1['tipo'][0] <= 1 and cat == "OpMult"):
+					resto_term['tipo'] = (max(factor['tipo'][0], resto_term1['tipo'][0]), )
+				elif (factor['tipo'] == resto_term['tipo'] and factor['tipo'][0] == 2 and cat == "PR"):
+					resto_term['tipo'] = (2, )
+				else:
+					self.errorCompat(tipo1 = factor['tipo'][0], tipo2 = resto_term1['tipo'][0])
+			else:
+				if (factor['tipo'][0] <= 1 and cat == "OpMult"):
+					resto_term['tipo'] = factor['tipo']
+				elif (factor['tipo'][0] == 2 and cat == "PR"):
+					resto_term['tipo'] = (2, )
+				else:
+					self.errorCompat(tipo1 = factor['tipo'][0], tipo2 = -1)
 		elif (not (self.component.cat in ["PtoComa", "CorCi", "ParentCi", "OpRel", "OpAdd"] or (self.component.cat == "PR" and self.component.valor in ["ENTONCES", "HACER", "O"]))):
 			self.error(msg='OpMult, Y, ;, ), OpRel, OpAdd, ENTONCES, HACER, O', 
 				sync=set([None, "PR", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
@@ -408,17 +536,26 @@ class SynAna:
 		if (self.component == None):
 			pass
 		elif (self.component.cat == "Identif"):
-			self.analyzeVariable(ids = factor['ids'])
+			variable = self.analyzeVariable(ids = factor['ids'], tipo_id = factor['tipo_id'])
+			factor['tipo'] = variable['tipo']
 		elif (self.component.cat == "Numero"):
+			if (self.component.isInt):
+				factor['tipo'] = (0, )
+			else:
+				factor['tipo'] = (1, )
 			self.advance()
 		elif (self.component.cat == "ParentAp"):
 			self.advance()
-			self.analyzeExpresion(ids = factor['ids'])
+			expresion = self.analyzeExpresion(ids = factor['ids'], tipo_id = factor['tipo_id'])
 			self.check(cat="ParentCi", sync=set([None, "PR", "OpMult", "OpAdd", "OpRel", "CorCi", "ParentCi", "PtoComa"]),
 				spr=set(["Y", "O", "ENTONCES", "HACER"]))
+			factor['tipo'] = expresion['tipo']
 		elif (self.component.cat == "PR" and self.component.valor == "NO"):
 			self.advance()
-			factor2 = self.analyzeFactor(ids = factor['ids'])
+			factor1 = self.analyzeFactor(ids = factor['ids'], tipo_id = factor['tipo_id'])
+			factor['tipo'] = (2, )
+			if (factor1['tipo'][0] != 2):
+				self.errorCast(tipo1 = factor1['tipo'][0], tipo2 = 2)
 		elif (self.component.cat == "PR" and self.component.valor in ["CIERTO", "FALSO"]):
 			self.advance()
 		else:
@@ -491,6 +628,34 @@ class SynAna:
 	def errorBefore(self, **kwargs):
 		self.errored = True
 		print ("El identificador " + kwargs['id'] + " no ha sido declarado!")
+	
+	def errorCast(self, **kwargs):
+		self.errored = True
+		choices = {0: 'ENTERO', 1: 'REAL', 2: 'BOOLEANO', 4: 'VECTOR', 5: 'PROC', 6: 'FUNCION', -1: 'ERROR'}
+		print ("No se puede pasar de " + choices[kwargs['tipo1']] + " a " + choices[kwargs['tipo2']])
+	
+	def errorNotVector(self, **kwargs):
+		self.errored = True
+		print (kwargs['id'] + " no es un VECTOR")
+	
+	def errorAVector(self, **kwargs):
+		self.errored = True
+		print ("Se debe usar un ENTERO en los accesos a vector")
+	
+	def errorComp(self, **kwargs):
+		self.errored = True
+		choices = {0: 'ENTERO', 1: 'REAL', 2: 'BOOLEANO', 4: 'VECTOR', 5: 'PROC', 6: 'FUNCION', -1: 'ERROR'}
+		print (choices[kwargs['tipo1']] + " y " + choices[kwargs['tipo2']] + " no son comparables")
+	
+	def errorCompat(self, **kwargs):
+		self.errored = True
+		choices = {0: 'ENTERO', 1: 'REAL', 2: 'BOOLEANO', 4: 'VECTOR', 5: 'PROC', 6: 'FUNCION', -1: 'ERROR'}
+		print (choices[kwargs['tipo1']] + " y " + choices[kwargs['tipo2']] + " no son compatibles")
+	
+	def errorUnsigned(self, **kwargs):
+		self.errored = True
+		choices = {0: 'ENTERO', 1: 'REAL', 2: 'BOOLEANO', 4: 'VECTOR', 5: 'PROC', 6: 'FUNCION', -1: 'ERROR'}
+		print (choices[kwargs['tipo']] + " no puede tener signo")
 
 	def __init__(self, lexana):
 		self.lexana = lexana
