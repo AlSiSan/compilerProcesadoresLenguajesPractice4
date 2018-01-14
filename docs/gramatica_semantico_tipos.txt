@@ -143,5 +143,4 @@
 		 -> CIERTO
 		 -> FALSO
 
-<signo> -> +
-		-> -
+<signo> -> + | -
